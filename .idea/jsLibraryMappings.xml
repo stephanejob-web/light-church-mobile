@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <excludedPredefinedLibrary name="lighchurch/lightchurch-backend/node_modules" />
+    <excludedPredefinedLibrary name="lighchurch/lightchurch-frontend/node_modules" />
+    <excludedPredefinedLibrary name="light-church-mobile/node_modules" />
+  </component>
+</project>
