@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useCallback, forwardRef, useState, useDeferredValue } from 'react';
-import { StyleSheet, ActivityIndicator } from 'react-native';
+import { StyleSheet, ActivityIndicator, Dimensions, Platform } from 'react-native';
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Box, Text } from '@/components/ui';
 import ChurchCard from '@/components/cards/ChurchCard';
@@ -25,8 +25,14 @@ interface ChurchesBottomSheetProps {
 
 const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
   ({ churches, events, showChurches: initialShowChurches, showEvents: initialShowEvents, onChurchPress, onEventPress }, ref) => {
-    // Snap points: peek (12%), half (50%), full (90%)
-    const snapPoints = useMemo(() => ['12%', '50%', '90%'], []);
+    // Calculate top snap point dynamically to stop below search bar
+    // SearchBar is ~50px height + top margin (60px iOS / 20px Android) + some padding
+    const screenHeight = Dimensions.get('window').height;
+    const topOffset = Platform.OS === 'ios' ? 140 : 100; // Approximate offset for search bar
+    const topSnapPoint = screenHeight - topOffset;
+
+    // Snap points: peek (12%), half (50%), calculated top point
+    const snapPoints = useMemo(() => ['12%', '50%', topSnapPoint], [topSnapPoint]);
 
     // Internal filter state (independent from map filters)
     const [filterChurches, setFilterChurches] = useState(true);
@@ -160,6 +166,7 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
         index={0}
         snapPoints={snapPoints}
         enablePanDownToClose={false}
+        enableOverDrag={false}
         handleIndicatorStyle={styles.handleIndicator}
         backgroundStyle={styles.background}
       >

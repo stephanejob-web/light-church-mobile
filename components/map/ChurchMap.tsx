@@ -8,6 +8,8 @@ import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import MapViewClustering from 'react-native-map-clustering';
 import { MAP_CONFIG, COLORS } from '@/constants/config';
 import type { Church, Event, UserLocation } from '@/types';
+import ChurchMarker from './ChurchMarker';
+import EventMarker from './EventMarker';
 
 interface ChurchMapProps {
   churches: Church[];
@@ -42,6 +44,14 @@ const ChurchMap = forwardRef<MapView, ChurchMapProps>(({
     onRegionChange?.(region);
   }, [onRegionChange]);
 
+  const handleChurchPress = useCallback((church: Church) => {
+    onChurchPress?.(church);
+  }, [onChurchPress]);
+
+  const handleEventPress = useCallback((event: Event) => {
+    onEventPress?.(event);
+  }, [onEventPress]);
+
   return (
     <MapViewClustering
       ref={ref}
@@ -58,34 +68,35 @@ const ChurchMap = forwardRef<MapView, ChurchMapProps>(({
       showsUserLocation={!!userLocation}
       showsMyLocationButton={false}
       toolbarEnabled={false}
+      // Performance optimization props
+      extent={512}
+      nodeSize={64}
+      animationEnabled={false} // Disable animations for better performance
+      spiderLineColor={COLORS.PRIMARY}
     >
       {/* Church Markers */}
       {churches.map((church) => (
-        <Marker
+        <ChurchMarker
           key={`church-${church.id}`}
+          church={church}
           coordinate={{
             latitude: church.latitude,
             longitude: church.longitude,
           }}
-          title={church.church_name}
-          description={church.denomination_name}
-          pinColor={COLORS.PRIMARY}
-          onPress={() => onChurchPress?.(church)}
+          onPress={handleChurchPress}
         />
       ))}
 
       {/* Event Markers */}
       {events.map((event) => (
-        <Marker
+        <EventMarker
           key={`event-${event.id}`}
+          event={event}
           coordinate={{
             latitude: event.latitude,
             longitude: event.longitude,
           }}
-          title={event.title}
-          description={event.church_name}
-          pinColor={COLORS.WARNING}
-          onPress={() => onEventPress?.(event)}
+          onPress={handleEventPress}
         />
       ))}
     </MapViewClustering>
