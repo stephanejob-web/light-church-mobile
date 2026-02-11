@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useCallback, forwardRef, useState, useDeferredValue } from 'react';
-import { StyleSheet, ActivityIndicator, Dimensions, Platform } from 'react-native';
+import { StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Box, Text } from '@/components/ui';
 import ChurchCard from '@/components/cards/ChurchCard';
@@ -25,14 +25,13 @@ interface ChurchesBottomSheetProps {
 
 const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
   ({ churches, events, showChurches: initialShowChurches, showEvents: initialShowEvents, onChurchPress, onEventPress }, ref) => {
-    // Calculate top snap point dynamically to stop below search bar
-    // SearchBar is ~50px height + top margin (60px iOS / 20px Android) + some padding
-    const screenHeight = Dimensions.get('window').height;
-    const topOffset = Platform.OS === 'ios' ? 140 : 100; // Approximate offset for search bar
-    const topSnapPoint = screenHeight - topOffset;
+    // Top inset: prevents bottom sheet from going above search bar
+    // SearchBar top: 60px (iOS) / 20px (Android) + height ~50px + padding ~30px
+    const topInset = Platform.OS === 'ios' ? 140 : 100;
 
-    // Snap points: peek (12%), half (50%), calculated top point
-    const snapPoints = useMemo(() => ['12%', '50%', topSnapPoint], [topSnapPoint]);
+    // Snap points: peek (12%), half (50%), max (100%)
+    // The sheet is capped by topInset, so 100% means "as high as allowed"
+    const snapPoints = useMemo(() => ['12%', '50%', '100%'], []);
 
     // Internal filter state (independent from map filters)
     const [filterChurches, setFilterChurches] = useState(true);
@@ -165,6 +164,7 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
         ref={ref}
         index={0}
         snapPoints={snapPoints}
+        topInset={topInset}
         enablePanDownToClose={false}
         enableOverDrag={false}
         handleIndicatorStyle={styles.handleIndicator}
