@@ -5,7 +5,7 @@
 
 import React, { useMemo, useCallback, forwardRef, useState, useDeferredValue } from 'react';
 import { StyleSheet, ActivityIndicator, Platform } from 'react-native';
-import BottomSheet, { BottomSheetFlashList } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Box, Text } from '@/components/ui';
 import ChurchCard from '@/components/cards/ChurchCard';
 import EventCard from '@/components/cards/EventCard';
@@ -225,13 +225,12 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
 
         {/* Results List */}
         {data.length > 0 ? (
-          <BottomSheetFlashList
+          <BottomSheetFlatList
             data={data}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            estimatedItemSize={100}
           />
         ) : (
           <Box padding="xl" alignItems="center" justifyContent="center" flex={1}>
