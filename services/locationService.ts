@@ -4,6 +4,7 @@
 
 import * as Location from 'expo-location';
 import type { UserLocation } from '@/types';
+import { logger } from '@/utils/logger';
 
 /**
  * Request location permissions
@@ -13,7 +14,7 @@ export const requestLocationPermission = async (): Promise<boolean> => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     return status === 'granted';
   } catch (error) {
-    console.error('Error requesting location permission:', error);
+    logger.error('Error requesting location permission:', error);
     return false;
   }
 };
@@ -25,7 +26,7 @@ export const getCurrentLocation = async (): Promise<UserLocation | null> => {
   try {
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
-      console.warn('Location permission denied');
+      logger.warn('Location permission denied');
       return null;
     }
 
@@ -43,7 +44,7 @@ export const getCurrentLocation = async (): Promise<UserLocation | null> => {
       timestamp: location.timestamp,
     };
   } catch (error) {
-    console.error('Error getting current location:', error);
+    logger.error('Error getting current location:', error);
     return null;
   }
 };
@@ -81,7 +82,7 @@ export const watchLocation = async (
 
     return subscription;
   } catch (error) {
-    console.error('Error watching location:', error);
+    logger.error('Error watching location:', error);
     return null;
   }
 };

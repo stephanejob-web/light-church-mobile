@@ -12,6 +12,8 @@ import { TimeProvider } from '@/contexts/TimeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import theme from '@/theme/theme';
 
+const ROOT_STYLE = { flex: 1 } as const;
+
 export const unstable_settings = {
   anchor: '(tabs)',
 };
@@ -45,7 +47,7 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={ROOT_STYLE}>
       <QueryProvider>
         <TimeProvider>
           <ToastProvider>

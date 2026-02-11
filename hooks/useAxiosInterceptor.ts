@@ -6,6 +6,7 @@
 import { useEffect, useRef } from 'react';
 import api from '@/lib/axios';
 import { useToast } from '@/contexts/ToastContext';
+import { logger } from '@/utils/logger';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // Throttle: permet d'afficher max 1 toast du même type toutes les X ms
@@ -150,5 +151,5 @@ function handleAxiosError(
   }
 
   // 5. Autres erreurs inconnues
-  console.error('Erreur inconnue:', error);
+  logger.error('Erreur inconnue:', error);
 }

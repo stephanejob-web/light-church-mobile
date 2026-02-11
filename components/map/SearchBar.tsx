@@ -31,7 +31,7 @@ interface SearchBarProps {
   onLocationSelect: (latitude: number, longitude: number, label: string) => void;
 }
 
-export default function SearchBar({ onLocationSelect }: SearchBarProps) {
+const SearchBar = React.memo(function SearchBar({ onLocationSelect }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -154,7 +154,9 @@ export default function SearchBar({ onLocationSelect }: SearchBarProps) {
       )}
     </Box>
   );
-}
+});
+
+export default SearchBar;
 
 const styles = StyleSheet.create({
   container: {

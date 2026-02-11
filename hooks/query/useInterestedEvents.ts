@@ -61,20 +61,15 @@ export function useInterestedEvents() {
 
 /**
  * Hook: Get count of interested events (for badge)
- * Lightweight version with immediate updates
+ * Derives count from the same query to avoid duplicate fetch
  */
 export function useInterestedEventsCount() {
   return useQuery({
-    queryKey: ['interestedEventsCount'],
-    queryFn: async () => {
-      const events = await fetchInterestedEvents();
-      return events.length;
-    },
-    staleTime: 0, // Always fresh - updates immediately after invalidation
-    gcTime: 30 * 60 * 1000, // 30 minutes cache retention
-    retry: 1,
-    refetchOnWindowFocus: true,
-    refetchOnMount: 'always', // Always refetch on mount
+    queryKey: ['interestedEvents'],
+    queryFn: fetchInterestedEvents,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    select: (data) => data.length,
   });
 }
 
@@ -124,9 +119,7 @@ export function useRemoveInterest() {
     // Always refetch after mutation (success or error)
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['interestedEvents'] });
-      queryClient.invalidateQueries({ queryKey: ['interestedEventsCount'] }); // Update badge
-      queryClient.invalidateQueries({ queryKey: ['events'] }); // Update main list
-      queryClient.invalidateQueries({ queryKey: ['event'] }); // Update detail screens
+      queryClient.invalidateQueries({ queryKey: ['events'] });
     },
   });
 }

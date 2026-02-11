@@ -2,7 +2,7 @@
  * Church Detail Page
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ScrollView, StyleSheet, ActivityIndicator, Linking, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useLocalSearchParams } from 'expo-router';
@@ -17,36 +17,43 @@ export default function ChurchDetailScreen() {
   const { data, isLoading, error, refetch } = useChurchDetail(Number(id));
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleOpenMaps = () => {
+  // Lazy-load mini map
+  const [showMap, setShowMap] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowMap(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleOpenMaps = useCallback(() => {
     if (!data?.church) return;
     const { latitude, longitude } = data.church;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
     Linking.openURL(url);
-  };
+  }, [data?.church]);
 
-  const handleCall = () => {
+  const handleCall = useCallback(() => {
     if (!data?.church?.details?.phone) return;
     Linking.openURL(`tel:${data.church.details.phone}`);
-  };
+  }, [data?.church?.details?.phone]);
 
-  const handleWebsite = () => {
+  const handleWebsite = useCallback(() => {
     if (!data?.church?.details?.website) return;
     Linking.openURL(data.church.details.website);
-  };
+  }, [data?.church?.details?.website]);
 
-  const handleEmail = () => {
+  const handleEmail = useCallback(() => {
     if (!data?.church?.email) return;
     Linking.openURL(`mailto:${data.church.email}`);
-  };
+  }, [data?.church?.email]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
       await refetch();
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -141,7 +148,7 @@ export default function ChurchDetailScreen() {
           {/* Pastor */}
           {(church.details?.pastor_first_name || church.details?.pastor_last_name) && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="person-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="person-outline" size={20} color="#5F6368" style={churchStyles.iconOffset} />
               <Box flex={1}>
                 <Text variant="body">
                   {church.details.pastor_first_name} {church.details.pastor_last_name}
@@ -156,7 +163,7 @@ export default function ChurchDetailScreen() {
           {/* Address */}
           {church.details?.address && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="location-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="location-outline" size={20} color="#5F6368" style={churchStyles.iconOffset} />
               <Box flex={1}>
                 <Text variant="body">
                   {church.details.address}
@@ -173,27 +180,32 @@ export default function ChurchDetailScreen() {
                   borderWidth={1}
                   borderColor="border"
                 >
-                  <MapView
-                    provider={PROVIDER_GOOGLE}
-                    style={{ flex: 1 }}
-                    initialRegion={{
-                      latitude: church.latitude,
-                      longitude: church.longitude,
-                      latitudeDelta: 0.005,
-                      longitudeDelta: 0.005,
-                    }}
-                    liteMode={Platform.OS === 'android'}
-                    scrollEnabled={false}
-                    zoomEnabled={false}
-                    pitchEnabled={false}
-                    rotateEnabled={false}
-                    onPress={handleOpenMaps}
-                  >
-                    <Marker
-                      coordinate={{ latitude: church.latitude, longitude: church.longitude }}
-                      pinColor="#EA4335"
-                    />
-                  </MapView>
+                  {showMap ? (
+                    <MapView
+                      provider={PROVIDER_GOOGLE}
+                      style={churchStyles.flex1}
+                      initialRegion={{
+                        latitude: church.latitude,
+                        longitude: church.longitude,
+                        latitudeDelta: 0.005,
+                        longitudeDelta: 0.005,
+                      }}
+                      liteMode={Platform.OS === 'android'}
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                      pitchEnabled={false}
+                      rotateEnabled={false}
+                      onPress={handleOpenMaps}
+                    >
+                      <Marker
+                        coordinate={{ latitude: church.latitude, longitude: church.longitude }}
+                        pinColor="#EA4335"
+                        tracksViewChanges={false}
+                      />
+                    </MapView>
+                  ) : (
+                    <View style={churchStyles.mapPlaceholder} />
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -202,7 +214,7 @@ export default function ChurchDetailScreen() {
           {/* Phone */}
           {church.details?.phone && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="call-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="call-outline" size={20} color="#5F6368" style={churchStyles.iconOffset} />
               <Box flex={1}>
                 <Text variant="body" color="primary" onPress={handleCall}>
                   {church.details.phone}
@@ -214,7 +226,7 @@ export default function ChurchDetailScreen() {
           {/* Email */}
           {church.email && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="mail-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="mail-outline" size={20} color="#5F6368" style={churchStyles.iconOffset} />
               <Box flex={1}>
                 <Text variant="body" color="primary" onPress={handleEmail}>
                   {church.email}
@@ -226,7 +238,7 @@ export default function ChurchDetailScreen() {
           {/* Website */}
           {church.details?.website && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="globe-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="globe-outline" size={20} color="#5F6368" style={churchStyles.iconOffset} />
               <Box flex={1}>
                 <Text variant="body" color="primary" onPress={handleWebsite}>
                   {church.details.website}
@@ -238,7 +250,7 @@ export default function ChurchDetailScreen() {
           {/* Status */}
           {church.details?.status && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="information-circle-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="information-circle-outline" size={20} color="#5F6368" style={churchStyles.iconOffset} />
               <Box flex={1}>
                 <Box flexDirection="row" alignItems="center" gap="xs">
                   <Text variant="body" color={church.details.status === 'ACTIVE' ? 'success' : 'textSecondary'}>
@@ -262,7 +274,7 @@ export default function ChurchDetailScreen() {
           </Text>
           {church.schedules.map((schedule, index) => (
             <Box
-              key={index}
+              key={`${schedule.day_of_week}-${schedule.activity_type}-${schedule.start_time}`}
               flexDirection="row"
               justifyContent="space-between"
               marginBottom="s"
@@ -348,7 +360,7 @@ export default function ChurchDetailScreen() {
 
               return (
                 <TouchableOpacity
-                  key={index}
+                  key={`${social.platform}-${social.url}`}
                   onPress={() => Linking.openURL(social.url)}
                   activeOpacity={0.7}
                 >
@@ -448,4 +460,10 @@ const buttonStyles = StyleSheet.create({
     fontWeight: '600',
     color: '#4285F4',
   },
+});
+
+const churchStyles = StyleSheet.create({
+  flex1: { flex: 1 },
+  iconOffset: { marginTop: 2 },
+  mapPlaceholder: { flex: 1, backgroundColor: '#F1F3F4' },
 });

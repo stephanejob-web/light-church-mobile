@@ -11,7 +11,7 @@ interface MapTypeToggleProps {
   onPress: () => void;
 }
 
-export default function MapTypeToggle({ onPress }: MapTypeToggleProps) {
+const MapTypeToggle = React.memo(function MapTypeToggle({ onPress }: MapTypeToggleProps) {
   return (
     <TouchableOpacity
       style={styles.button}
@@ -21,7 +21,9 @@ export default function MapTypeToggle({ onPress }: MapTypeToggleProps) {
       <Ionicons name="layers-outline" size={22} color="#202124" />
     </TouchableOpacity>
   );
-}
+});
+
+export default MapTypeToggle;
 
 const styles = StyleSheet.create({
   button: {

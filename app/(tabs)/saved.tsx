@@ -16,8 +16,32 @@ import EventCard from '@/components/cards/EventCard';
 import { useInterestedEvents, useRemoveInterest } from '@/hooks/query/useInterestedEvents';
 import { useToast } from '@/contexts/ToastContext';
 import type { Event } from '@/types';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
+// Wrapper to avoid inline arrow functions in renderItem (defeats React.memo on EventCard)
+const SavedEventItem = React.memo(({ event, onPress, onRemove }: { event: Event; onPress: (e: Event) => void; onRemove: (e: Event) => void }) => {
+  const handlePress = useCallback(() => onPress(event), [event, onPress]);
+  const handleRemove = useCallback(() => onRemove(event), [event, onRemove]);
+  return (
+    <View style={savedItemStyles.cardContainer}>
+      <View style={savedItemStyles.eventCardWrapper}>
+        <EventCard event={event} onPress={handlePress} />
+      </View>
+      <View style={savedItemStyles.actionsRow}>
+        <View style={savedItemStyles.savedBadge}>
+          <Ionicons name="bookmark" size={16} color="#4285F4" />
+          <Text style={savedItemStyles.savedText}>Enregistré</Text>
+        </View>
+        <TouchableOpacity
+          style={savedItemStyles.removeButton}
+          onPress={handleRemove}
+          activeOpacity={0.6}
+        >
+          <Text style={savedItemStyles.removeText}>Retirer</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
 
 // FlashList component with proper typing to handle estimatedItemSize prop
 // This resolves the type mismatch in FlashList v2.2.0 without using 'any'
@@ -38,15 +62,13 @@ export default function SavedScreen() {
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
   const [timeSinceRefresh, setTimeSinceRefresh] = useState('à l\'instant');
 
-  // Update time since last refresh every minute
+  // Update time since last refresh every minute (lightweight, no date-fns locale)
   useEffect(() => {
     const updateTimer = setInterval(() => {
-      const timeString = formatDistanceToNow(lastRefreshTime, {
-        addSuffix: true,
-        locale: fr
-      });
+      const elapsed = Math.floor((Date.now() - lastRefreshTime.getTime()) / 60000);
+      const timeString = elapsed === 0 ? 'à l\'instant' : elapsed < 60 ? `il y a ${elapsed} min` : `il y a ${Math.floor(elapsed / 60)}h`;
       setTimeSinceRefresh(timeString);
-    }, 60000); // Update every minute
+    }, 60000);
 
     return () => clearInterval(updateTimer);
   }, [lastRefreshTime]);
@@ -113,32 +135,10 @@ export default function SavedScreen() {
     }
   }, [removeInterestMutation.isError, removeInterestMutation.error, toast]);
 
-  // Render single event item (memoized)
+  // Render single event item using wrapper component (stable references)
   const renderItem = useCallback(
     ({ item }: { item: Event }) => (
-      <View style={styles.cardContainer}>
-        <View style={styles.eventCardWrapper}>
-          <EventCard event={item} onPress={() => handleEventPress(item)} />
-        </View>
-
-        {/* Action Buttons - Google Maps Saved Places Style */}
-        <View style={styles.actionsRow}>
-          {/* Saved Badge */}
-          <View style={styles.savedBadge}>
-            <Ionicons name="bookmark" size={16} color="#4285F4" />
-            <Text style={styles.savedText}>Enregistré</Text>
-          </View>
-
-          {/* Remove Button */}
-          <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => handleRemoveInterest(item)}
-            activeOpacity={0.6}
-          >
-            <Text style={styles.removeText}>Retirer</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <SavedEventItem event={item} onPress={handleEventPress} onRemove={handleRemoveInterest} />
     ),
     [handleEventPress, handleRemoveInterest]
   );
@@ -190,11 +190,8 @@ export default function SavedScreen() {
     );
   }, [isLoading, isError]);
 
-  // Check if refresh needed (more than 5 minutes)
-  const needsRefresh = useMemo(() => {
-    const minutesSinceRefresh = (Date.now() - lastRefreshTime.getTime()) / (1000 * 60);
-    return minutesSinceRefresh > 5;
-  }, [lastRefreshTime]);
+  // Check if refresh needed (more than 5 minutes) - recomputes when timeSinceRefresh changes
+  const needsRefresh = (Date.now() - lastRefreshTime.getTime()) / (1000 * 60) > 5;
 
   return (
     <View style={styles.container}>
@@ -429,5 +426,58 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     maxWidth: 300,
     paddingHorizontal: 24,
+  },
+});
+
+// Styles for SavedEventItem wrapper (extracted to avoid inline style objects)
+const savedItemStyles = StyleSheet.create({
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginVertical: 6,
+    borderRadius: 12,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  eventCardWrapper: {},
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FAFAFA',
+    borderTopWidth: 1,
+    borderTopColor: '#E8EAED',
+  },
+  savedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 4,
+  },
+  savedText: {
+    fontSize: 14,
+    color: '#4285F4',
+    fontWeight: '500',
+  },
+  removeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  removeText: {
+    fontSize: 14,
+    color: '#EA4335',
+    fontWeight: '500',
   },
 });

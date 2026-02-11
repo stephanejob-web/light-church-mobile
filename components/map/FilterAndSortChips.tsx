@@ -23,7 +23,7 @@ interface FilterAndSortChipsProps {
   onSortChange: (sortType: SortType) => void;
 }
 
-export default function FilterAndSortChips({
+const FilterAndSortChips = React.memo(function FilterAndSortChips({
   showChurches,
   showEvents,
   churchesCount,
@@ -141,7 +141,9 @@ export default function FilterAndSortChips({
       </ScrollView>
     </View>
   );
-}
+});
+
+export default FilterAndSortChips;
 
 const styles = StyleSheet.create({
   container: {

@@ -1,42 +1,27 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useInterestedEventsCount } from '@/hooks/query/useInterestedEvents';
 
+const ACTIVE_COLOR = '#4285F4';
+const INACTIVE_COLOR = '#5F6368';
+
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
-  // Get saved events count for badge (updates in real-time)
   const { data: savedCount = 0 } = useInterestedEventsCount();
-
-  // Google Maps style colors
-  const activeColor = '#4285F4'; // Google Blue
-  const inactiveColor = '#5F6368'; // Gray
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: activeColor,
-        tabBarInactiveTintColor: inactiveColor,
+        tabBarActiveTintColor: ACTIVE_COLOR,
+        tabBarInactiveTintColor: INACTIVE_COLOR,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E8EAED',
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
+        tabBarStyle: tabStyles.tabBar,
+        tabBarLabelStyle: tabStyles.tabBarLabel,
       }}>
-      {/* Découvrir - Main Map Screen */}
       <Tabs.Screen
         name="index"
         options={{
@@ -51,7 +36,6 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Enregistrés - Saved/Favorites */}
       <Tabs.Screen
         name="saved"
         options={{
@@ -64,20 +48,10 @@ export default function TabLayout() {
             />
           ),
           tabBarBadge: savedCount > 0 ? savedCount : undefined,
-          tabBarBadgeStyle: {
-            backgroundColor: '#EA4335', // Google Red
-            color: '#FFFFFF',
-            fontSize: 11,
-            fontWeight: '600',
-            minWidth: 18,
-            height: 18,
-            borderRadius: 9,
-            top: 2,
-          },
+          tabBarBadgeStyle: tabStyles.badge,
         }}
       />
 
-      {/* À propos - Privacy Policy & Info */}
       <Tabs.Screen
         name="about"
         options={{
@@ -91,14 +65,31 @@ export default function TabLayout() {
           ),
         }}
       />
-
-      {/* Hide old explore tab */}
-      <Tabs.Screen
-        name="explore"
-        options={{
-          href: null, // Hide from tabs
-        }}
-      />
     </Tabs>
   );
 }
+
+const tabStyles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: '#FFFFFF',
+    borderTopColor: '#E8EAED',
+    borderTopWidth: 1,
+    height: 60,
+    paddingBottom: 8,
+    paddingTop: 8,
+  },
+  tabBarLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  badge: {
+    backgroundColor: '#EA4335',
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    top: 2,
+  },
+});

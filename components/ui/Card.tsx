@@ -14,7 +14,7 @@ interface CardProps extends Omit<BoxProps<Theme>, 'children'> {
   elevation?: number;
 }
 
-export default function Card({
+const Card = React.memo(function Card({
   children,
   elevation = 2,
   ...boxProps
@@ -30,7 +30,9 @@ export default function Card({
       {children}
     </Box>
   );
-}
+});
+
+export default Card;
 
 const styles = StyleSheet.create({
   elevation1: {

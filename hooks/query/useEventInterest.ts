@@ -34,6 +34,8 @@ export function useIsInterested(eventId: number) {
       return response.data;
     },
     enabled: !!eventId,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
   });
 }
 
@@ -50,6 +52,8 @@ export function useInterestedCount(eventId: number) {
       return response.data;
     },
     enabled: !!eventId,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
   });
 }
 
@@ -84,14 +88,11 @@ export function useToggleEventInterest(eventId: number) {
       return response.data;
     },
     onSuccess: () => {
-      // Invalider les queries pour rafraîchir les données
+      // Invalider les queries essentielles
       queryClient.invalidateQueries({ queryKey: ['event-interest', eventId] });
-      queryClient.invalidateQueries({ queryKey: ['event-interest-count', eventId] });
-      queryClient.invalidateQueries({ queryKey: ['event-detail', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['event', eventId] });
       queryClient.invalidateQueries({ queryKey: ['events'] });
-      // IMPORTANT: Invalider aussi interestedEvents pour mettre à jour l'onglet "Enregistrés"
       queryClient.invalidateQueries({ queryKey: ['interestedEvents'] });
-      queryClient.invalidateQueries({ queryKey: ['interestedEventsCount'] }); // Update badge
     },
   });
 }

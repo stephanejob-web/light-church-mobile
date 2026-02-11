@@ -1,10 +1,10 @@
 /**
  * TimeContext - Global timer for real-time updates
- * Optimizes performance by avoiding re-renders of parent components
+ * Uses a timestamp number (rounded to the minute) to minimize re-renders
  * Only components that consume this context will re-render every minute
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 
 interface TimeContextValue {
   currentTime: Date;
@@ -13,19 +13,24 @@ interface TimeContextValue {
 const TimeContext = createContext<TimeContextValue | undefined>(undefined);
 
 export function TimeProvider({ children }: { children: ReactNode }) {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // Store timestamp rounded to the minute for stable comparisons
+  const [timestamp, setTimestamp] = useState(() => Math.floor(Date.now() / 60000));
 
   useEffect(() => {
-    // Update time every 60 seconds for countdown timers
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
+      setTimestamp(Math.floor(Date.now() / 60000));
     }, 60000);
 
     return () => clearInterval(timer);
   }, []);
 
+  // Only create a new Date when the minute changes
+  const value = useMemo<TimeContextValue>(() => ({
+    currentTime: new Date(timestamp * 60000),
+  }), [timestamp]);
+
   return (
-    <TimeContext.Provider value={{ currentTime }}>
+    <TimeContext.Provider value={value}>
       {children}
     </TimeContext.Provider>
   );

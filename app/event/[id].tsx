@@ -2,8 +2,9 @@
  * Event Detail Page
  */
 
-import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, ActivityIndicator, Linking, Image, Alert, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ScrollView, StyleSheet, ActivityIndicator, Linking, Alert, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -235,22 +236,32 @@ export default function EventDetailScreen() {
   }
 
   const event = data.event;
-  const startDate = new Date(event.start_datetime);
-  const endDate = new Date(event.end_datetime);
 
-  // Vérifier si l'événement dure plusieurs jours
-  const isSameDay = startDate.toDateString() === endDate.toDateString();
+  // Memoize all date computation and formatting
+  const { startDate, endDate, isSameDay, formattedDates, formattedMonth, formattedDay } = useMemo(() => {
+    const start = new Date(event.start_datetime);
+    const end = new Date(event.end_datetime);
+    const sameDay = start.toDateString() === end.toDateString();
+    return {
+      startDate: start,
+      endDate: end,
+      isSameDay: sameDay,
+      formattedDates: sameDay
+        ? `${format(start, 'EEEE d MMMM', { locale: fr })} \u2022 ${format(start, 'HH:mm', { locale: fr })} - ${format(end, 'HH:mm', { locale: fr })}`
+        : `Du ${format(start, 'EEE d MMM', { locale: fr })} ${format(start, 'HH:mm', { locale: fr })} au ${format(end, 'EEE d MMM', { locale: fr })} ${format(end, 'HH:mm', { locale: fr })}`,
+      formattedMonth: format(start, 'MMM', { locale: fr }).toUpperCase(),
+      formattedDay: sameDay
+        ? format(start, 'dd', { locale: fr })
+        : `${format(start, 'd', { locale: fr })}-${format(end, 'd', { locale: fr })}`,
+    };
+  }, [event.start_datetime, event.end_datetime]);
 
-  // Formater l'affichage des dates selon la durée
-  const formatEventDates = () => {
-    if (isSameDay) {
-      // Événement d'une journée : "Vendredi 6 mars • 07:00 - 18:00"
-      return `${format(startDate, 'EEEE d MMMM', { locale: fr })} • ${format(startDate, 'HH:mm', { locale: fr })} - ${format(endDate, 'HH:mm', { locale: fr })}`;
-    } else {
-      // Événement multi-jours : "Du ven. 6 mars 07:00 au dim. 8 mars 18:00"
-      return `Du ${format(startDate, 'EEE d MMM', { locale: fr })} ${format(startDate, 'HH:mm', { locale: fr })} au ${format(endDate, 'EEE d MMM', { locale: fr })} ${format(endDate, 'HH:mm', { locale: fr })}`;
-    }
-  };
+  // Lazy-load mini map (heavy native component)
+  const [showMap, setShowMap] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowMap(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <ScrollView
@@ -270,7 +281,9 @@ export default function EventDetailScreen() {
         <Image
           source={{ uri: event.details.image_url }}
           style={styles.image}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
         />
       )}
 
@@ -303,7 +316,7 @@ export default function EventDetailScreen() {
             padding="m"
             borderRadius="m"
             marginBottom="m"
-            style={{ borderLeftWidth: 4, borderLeftColor: '#EA4335' }}
+            style={eventStyles.cancelBorder}
           >
             <Box flexDirection="row" alignItems="center" marginBottom="xs">
               <Ionicons name="information-circle" size={18} color="#EA4335" />
@@ -337,21 +350,18 @@ export default function EventDetailScreen() {
             borderColor="border"
           >
             <Text variant="small" color="error" fontWeight="700" textTransform="uppercase" fontSize={10}>
-              {format(startDate, 'MMM', { locale: fr }).toUpperCase()}
+              {formattedMonth}
             </Text>
             <Text variant="title" color="text" fontWeight="700" fontSize={isSameDay ? 22 : 18} lineHeight={isSameDay ? 26 : 22}>
-              {isSameDay
-                ? format(startDate, 'dd', { locale: fr })
-                : `${format(startDate, 'd', { locale: fr })}-${format(endDate, 'd', { locale: fr })}`
-              }
+              {formattedDay}
             </Text>
           </Box>
 
           <Box flex={1}>
             <Box flexDirection="row" alignItems="center" gap="xs" marginBottom="xs" flex={1}>
               <Ionicons name="time-outline" size={16} color="#5F6368" />
-              <Text variant="body" color="textSecondary" style={{ flex: 1 }}>
-                {formatEventDates()}
+              <Text variant="body" color="textSecondary" style={eventStyles.flex1}>
+                {formattedDates}
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center" gap="xs">
@@ -508,7 +518,7 @@ export default function EventDetailScreen() {
           {event.details.description.length > 200 && (
             <TouchableOpacity
               onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              style={{ marginTop: 12 }}
+              style={eventStyles.readMoreBtn}
               activeOpacity={0.7}
             >
               <Text variant="body" color="primary" fontWeight="600">
@@ -530,7 +540,7 @@ export default function EventDetailScreen() {
             {/* Organizer Name */}
             {event.organizer_name && (
               <Box flexDirection="row" gap="m">
-                <Ionicons name="business-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+                <Ionicons name="business-outline" size={20} color="#5F6368" style={eventStyles.iconOffset} />
                 <Box flex={1}>
                   <Text variant="body">{event.organizer_name}</Text>
                   <Text variant="caption" color="textSecondary">
@@ -543,7 +553,7 @@ export default function EventDetailScreen() {
             {/* Pastor */}
             {(event.pastor_first_name || event.pastor_last_name) && (
               <Box flexDirection="row" gap="m">
-                <Ionicons name="person-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+                <Ionicons name="person-outline" size={20} color="#5F6368" style={eventStyles.iconOffset} />
                 <Box flex={1}>
                   <Text variant="body">
                     {event.pastor_first_name} {event.pastor_last_name}
@@ -558,7 +568,7 @@ export default function EventDetailScreen() {
             {/* Email */}
             {event.pastor_email && (
               <Box flexDirection="row" gap="m">
-                <Ionicons name="mail-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+                <Ionicons name="mail-outline" size={20} color="#5F6368" style={eventStyles.iconOffset} />
                 <Box flex={1}>
                   <Text variant="body" color="primary" onPress={handleEmail}>
                     {event.pastor_email}
@@ -580,7 +590,7 @@ export default function EventDetailScreen() {
           {/* Speaker */}
           {event.details?.speaker_name && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="mic-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="mic-outline" size={20} color="#5F6368" style={eventStyles.iconOffset} />
               <Box flex={1}>
                 <Text variant="body">{event.details.speaker_name}</Text>
                 <Text variant="caption" color="textSecondary">
@@ -593,7 +603,7 @@ export default function EventDetailScreen() {
           {/* Seats */}
           {event.details?.max_seats && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="ticket-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="ticket-outline" size={20} color="#5F6368" style={eventStyles.iconOffset} />
               <Box flex={1}>
                 <Text variant="body">{event.details.max_seats} places</Text>
                 <Text variant="caption" color="textSecondary">
@@ -606,7 +616,7 @@ export default function EventDetailScreen() {
           {/* Location & Map */}
           {event.details?.address && (
             <Box flexDirection="row" gap="m">
-              <Ionicons name="location-outline" size={20} color="#5F6368" style={{ marginTop: 2 }} />
+              <Ionicons name="location-outline" size={20} color="#5F6368" style={eventStyles.iconOffset} />
               <Box flex={1}>
                 <Text variant="body">
                   {event.details.address}
@@ -620,7 +630,7 @@ export default function EventDetailScreen() {
                   )}
                 </Text>
 
-                {/* Mini Map */}
+                {/* Mini Map - lazy loaded for faster initial render */}
                 <Box
                   height={150}
                   borderRadius="m"
@@ -629,27 +639,32 @@ export default function EventDetailScreen() {
                   borderWidth={1}
                   borderColor="border"
                 >
-                  <MapView
-                    provider={PROVIDER_GOOGLE}
-                    style={{ flex: 1 }}
-                    initialRegion={{
-                      latitude: event.latitude,
-                      longitude: event.longitude,
-                      latitudeDelta: 0.005,
-                      longitudeDelta: 0.005,
-                    }}
-                    liteMode={Platform.OS === 'android'}
-                    scrollEnabled={false}
-                    zoomEnabled={false}
-                    pitchEnabled={false}
-                    rotateEnabled={false}
-                    onPress={handleOpenMaps}
-                  >
-                    <Marker
-                      coordinate={{ latitude: event.latitude, longitude: event.longitude }}
-                      pinColor="#EA4335"
-                    />
-                  </MapView>
+                  {showMap ? (
+                    <MapView
+                      provider={PROVIDER_GOOGLE}
+                      style={eventStyles.flex1}
+                      initialRegion={{
+                        latitude: event.latitude,
+                        longitude: event.longitude,
+                        latitudeDelta: 0.005,
+                        longitudeDelta: 0.005,
+                      }}
+                      liteMode={Platform.OS === 'android'}
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                      pitchEnabled={false}
+                      rotateEnabled={false}
+                      onPress={handleOpenMaps}
+                    >
+                      <Marker
+                        coordinate={{ latitude: event.latitude, longitude: event.longitude }}
+                        pinColor="#EA4335"
+                        tracksViewChanges={false}
+                      />
+                    </MapView>
+                  ) : (
+                    <View style={eventStyles.mapPlaceholder} />
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -712,7 +727,7 @@ export default function EventDetailScreen() {
             Diffusion en direct
           </Text>
           <TouchableOpacity
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+            style={eventStyles.youtubeRow}
             onPress={() => Linking.openURL(event.details!.youtube_live!)}
             activeOpacity={0.7}
           >
@@ -801,4 +816,13 @@ const buttonStyles = StyleSheet.create({
   buttonTextDisabled: {
     color: '#9CA3AF',
   },
+});
+
+const eventStyles = StyleSheet.create({
+  flex1: { flex: 1 },
+  iconOffset: { marginTop: 2 },
+  cancelBorder: { borderLeftWidth: 4, borderLeftColor: '#EA4335' },
+  youtubeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  readMoreBtn: { marginTop: 12 },
+  mapPlaceholder: { flex: 1, backgroundColor: '#F1F3F4' },
 });

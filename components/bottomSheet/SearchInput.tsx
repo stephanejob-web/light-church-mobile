@@ -14,7 +14,7 @@ interface SearchInputProps {
   resultCount?: number;
 }
 
-export default function SearchInput({
+const SearchInput = React.memo(function SearchInput({
   value,
   onChangeText,
   placeholder = 'Filtrer les résultats...',
@@ -74,7 +74,9 @@ export default function SearchInput({
       )}
     </View>
   );
-}
+});
+
+export default SearchInput;
 
 const styles = StyleSheet.create({
   container: {

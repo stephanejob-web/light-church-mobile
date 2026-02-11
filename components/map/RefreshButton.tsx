@@ -13,7 +13,7 @@ interface RefreshButtonProps {
   showBadge?: boolean;
 }
 
-export default function RefreshButton({ onPress, loading = false, showBadge = false }: RefreshButtonProps) {
+const RefreshButton = React.memo(function RefreshButton({ onPress, loading = false, showBadge = false }: RefreshButtonProps) {
   const spinValue = useRef(new Animated.Value(0)).current;
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -68,7 +68,9 @@ export default function RefreshButton({ onPress, loading = false, showBadge = fa
       )}
     </TouchableOpacity>
   );
-}
+});
+
+export default RefreshButton;
 
 const styles = StyleSheet.create({
   button: {

@@ -3,7 +3,7 @@
  * Non-intrusive snackbar-style notifications
  */
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import { Animated, StyleSheet, Dimensions, Platform, Text } from 'react-native';
 import { Box } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
@@ -73,8 +73,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  const contextValue = useMemo(
+    () => ({ showToast, showError, showSuccess, showWarning, showInfo }),
+    [showToast, showError, showSuccess, showWarning, showInfo]
+  );
+
   return (
-    <ToastContext.Provider value={{ showToast, showError, showSuccess, showWarning, showInfo }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
 
       {/* Toast Container */}

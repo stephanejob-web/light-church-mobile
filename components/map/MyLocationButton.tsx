@@ -11,7 +11,7 @@ interface MyLocationButtonProps {
   onPress: () => void;
 }
 
-export default function MyLocationButton({ onPress }: MyLocationButtonProps) {
+const MyLocationButton = React.memo(function MyLocationButton({ onPress }: MyLocationButtonProps) {
   return (
     <TouchableOpacity
       style={styles.button}
@@ -21,7 +21,9 @@ export default function MyLocationButton({ onPress }: MyLocationButtonProps) {
       <Ionicons name="locate" size={24} color="#4285F4" />
     </TouchableOpacity>
   );
-}
+});
+
+export default MyLocationButton;
 
 const styles = StyleSheet.create({
   button: {

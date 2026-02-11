@@ -8,6 +8,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '@/lib/axios';
 import Constants from 'expo-constants';
+import { logger } from '@/utils/logger';
 
 /**
  * Types for expo-notifications and expo-device modules
@@ -42,7 +43,7 @@ if (!isExpoGo) {
       });
     }
   } catch (error) {
-    console.warn('Push notifications not available in Expo Go');
+    logger.warn('Push notifications not available in Expo Go');
   }
 }
 
@@ -55,7 +56,7 @@ const PUSH_TOKEN_KEY = '@light_church:push_token';
 export async function requestPushPermissions(): Promise<boolean> {
   // Dans Expo Go, retourner false (notifications non disponibles)
   if (isExpoGo || !Notifications || !Device) {
-    console.warn('Push notifications not available in Expo Go');
+    logger.warn('Push notifications not available in Expo Go');
     return false;
   }
 
@@ -86,7 +87,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
   try {
     // Dans Expo Go, juste créer un device_id
     if (isExpoGo || !Notifications) {
-      console.warn('Expo Go detected: creating device_id without push notifications');
+      logger.warn('Expo Go detected: creating device_id without push notifications');
       return await getDeviceId();
     }
 
@@ -122,7 +123,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
 
     return deviceId;
   } catch (error) {
-    console.error('Error registering for push notifications:', error);
+    logger.error('Error registering for push notifications:', error);
     // En cas d'erreur, au moins créer un device_id
     return await getDeviceId();
   }
@@ -144,7 +145,7 @@ export async function getDeviceId(): Promise<string | null> {
 
     return deviceId;
   } catch (error) {
-    console.error('Error getting device ID:', error);
+    logger.error('Error getting device ID:', error);
     return null;
   }
 }
@@ -161,7 +162,7 @@ export async function hasNotificationPermission(): Promise<boolean> {
     const { status } = await Notifications.getPermissionsAsync();
     return status === 'granted';
   } catch (error) {
-    console.warn('Could not check notification permission:', error);
+    logger.warn('Could not check notification permission:', error);
     return false;
   }
 }
@@ -185,7 +186,7 @@ export async function setupAndroidNotificationChannel() {
         sound: 'default',
       });
     } catch (error) {
-      console.warn('Could not setup Android notification channel:', error);
+      logger.warn('Could not setup Android notification channel:', error);
     }
   }
 }

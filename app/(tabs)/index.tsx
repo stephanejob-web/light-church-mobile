@@ -24,6 +24,8 @@ import { useChurches, useEvents } from '@/hooks/query';
 import { getBoundingBox } from '@/utils/geo';
 import { MAP_CONFIG } from '@/constants/config';
 import { useToast } from '@/contexts/ToastContext';
+import { useDebounce } from '@/hooks/useDebounce';
+import { logger } from '@/utils/logger';
 import type { Church, Event } from '@/types';
 
 export default function MapScreen() {
@@ -59,16 +61,22 @@ export default function MapScreen() {
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
   const [showRefreshBadge, setShowRefreshBadge] = useState(false);
 
-  // Calculate query params
+  // Debounce map region to avoid excessive API calls during panning
+  const debouncedRegion = useDebounce(mapRegion, 600);
+
+  // Calculate query params with rounded coordinates for cache reuse
   const queryParams = useMemo(() => {
-    const bbox = getBoundingBox(mapRegion);
+    const bbox = getBoundingBox(debouncedRegion);
     return {
-      ...bbox,
-      userLat: userLocation?.latitude,
-      userLng: userLocation?.longitude,
-      limit: 100,
+      north: Math.round(bbox.north * 100) / 100,
+      south: Math.round(bbox.south * 100) / 100,
+      east: Math.round(bbox.east * 100) / 100,
+      west: Math.round(bbox.west * 100) / 100,
+      userLat: userLocation?.latitude ? Math.round(userLocation.latitude * 1000) / 1000 : undefined,
+      userLng: userLocation?.longitude ? Math.round(userLocation.longitude * 1000) / 1000 : undefined,
+      limit: 50,
     };
-  }, [mapRegion, userLocation]);
+  }, [debouncedRegion, userLocation]);
 
   // Fetch data
   const { data: churchesData, isLoading: churchesLoading, refetch: refetchChurches } = useChurches(queryParams, showChurches);
@@ -140,9 +148,13 @@ export default function MapScreen() {
     setMapRegion(newRegion);
   }, [userLocation, toast]);
 
-  // Handle map type toggle - open modal
+  // Handle map type toggle - open/close modal
   const handleToggleMapType = useCallback(() => {
     setShowMapTypeModal(true);
+  }, []);
+
+  const handleCloseMapTypeModal = useCallback(() => {
+    setShowMapTypeModal(false);
   }, []);
 
   // Handle map type selection from modal
@@ -184,7 +196,7 @@ export default function MapScreen() {
     } catch (error) {
       // Cette erreur ne devrait jamais arriver car refetch ne throw pas
       // Mais on garde le try/catch par sécurité
-      console.error('Erreur lors du refresh:', error);
+      logger.error('Erreur lors du refresh:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -232,7 +244,7 @@ export default function MapScreen() {
       <MapTypeModal
         visible={showMapTypeModal}
         currentMapType={mapType}
-        onClose={() => setShowMapTypeModal(false)}
+        onClose={handleCloseMapTypeModal}
         onSelectMapType={handleSelectMapType}
       />
 

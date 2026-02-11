@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { getCurrentLocation } from '@/services/locationService';
+import { logger } from '@/utils/logger';
 import type { UserLocation } from '@/types';
 
 export function useLocation() {
@@ -30,7 +31,7 @@ export function useLocation() {
       } catch (err) {
         if (mounted) {
           setError('Erreur lors de la récupération de la position');
-          console.error(err);
+          logger.error(err);
         }
       } finally {
         if (mounted) {
@@ -58,7 +59,7 @@ export function useLocation() {
       }
     } catch (err) {
       setError('Erreur lors de la récupération de la position');
-      console.error(err);
+      logger.error(err);
     } finally {
       setLoading(false);
     }

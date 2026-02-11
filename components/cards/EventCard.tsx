@@ -54,16 +54,24 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
   // Use global time context - only this component re-renders every minute
   const currentTime = useCurrentTime();
 
-  const startDate = new Date(event.start_datetime);
-  const endDate = event.end_datetime ? new Date(event.end_datetime) : null;
-  const isSameDay = endDate ? startDate.toDateString() === endDate.toDateString() : true;
-  const formattedDay = isSameDay
-    ? format(startDate, 'dd', { locale: fr })
-    : `${format(startDate, 'd', { locale: fr })}-${format(endDate!, 'd', { locale: fr })}`;
-  const formattedMonth = format(startDate, 'MMM', { locale: fr }).toUpperCase();
-  const formattedTime = isSameDay
-    ? format(startDate, 'HH:mm', { locale: fr })
-    : `${format(startDate, 'd MMM', { locale: fr })} - ${format(endDate!, 'd MMM', { locale: fr })}`;
+  // Memoize date parsing and formatting (expensive with date-fns locale)
+  const { startDate, endDate, isSameDay, formattedDay, formattedMonth, formattedTime } = useMemo(() => {
+    const start = new Date(event.start_datetime);
+    const end = event.end_datetime ? new Date(event.end_datetime) : null;
+    const sameDay = end ? start.toDateString() === end.toDateString() : true;
+    return {
+      startDate: start,
+      endDate: end,
+      isSameDay: sameDay,
+      formattedDay: sameDay
+        ? format(start, 'dd', { locale: fr })
+        : `${format(start, 'd', { locale: fr })}-${format(end!, 'd', { locale: fr })}`,
+      formattedMonth: format(start, 'MMM', { locale: fr }).toUpperCase(),
+      formattedTime: sameDay
+        ? format(start, 'HH:mm', { locale: fr })
+        : `${format(start, 'd MMM', { locale: fr })} - ${format(end!, 'd MMM', { locale: fr })}`,
+    };
+  }, [event.start_datetime, event.end_datetime]);
 
   // Calculer le statut de l'événement
   const eventStatus = useMemo(() => {

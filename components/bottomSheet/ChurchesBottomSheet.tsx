@@ -14,6 +14,17 @@ import SearchInput from './SearchInput';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Church, Event } from '@/types';
 
+// Wrapper components to avoid inline arrow functions in renderItem
+const ChurchCardItem = React.memo(({ church, onPress }: { church: Church; onPress: (c: Church) => void }) => {
+  const handlePress = useCallback(() => onPress(church), [church, onPress]);
+  return <ChurchCard church={church} onPress={handlePress} />;
+});
+
+const EventCardItem = React.memo(({ event, onPress }: { event: Event; onPress: (e: Event) => void }) => {
+  const handlePress = useCallback(() => onPress(event), [event, onPress]);
+  return <EventCard event={event} onPress={handlePress} />;
+});
+
 interface ChurchesBottomSheetProps {
   churches: Church[];
   events: Event[];
@@ -133,9 +144,9 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
 
     const renderItem = useCallback(({ item }: { item: typeof data[0] }) => {
       if (item.type === 'church') {
-        return <ChurchCard church={item.data as Church} onPress={() => onChurchPress(item.data as Church)} />;
+        return <ChurchCardItem church={item.data as Church} onPress={onChurchPress} />;
       } else {
-        return <EventCard event={item.data as Event} onPress={() => onEventPress(item.data as Event)} />;
+        return <EventCardItem event={item.data as Event} onPress={onEventPress} />;
       }
     }, [onChurchPress, onEventPress]);
 
@@ -224,6 +235,11 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
             keyExtractor={keyExtractor}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            windowSize={5}
+            maxToRenderPerBatch={10}
+            initialNumToRender={8}
+            removeClippedSubviews={true}
+            updateCellsBatchingPeriod={100}
           />
         ) : (
           <Box padding="xl" alignItems="center" justifyContent="center" flex={1}>

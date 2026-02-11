@@ -42,7 +42,7 @@ const MAP_TYPES = [
   },
 ] as const;
 
-export default function MapTypeModal({
+const MapTypeModal = React.memo(function MapTypeModal({
   visible,
   currentMapType,
   onClose,
@@ -163,7 +163,9 @@ export default function MapTypeModal({
       </TouchableWithoutFeedback>
     </Modal>
   );
-}
+});
+
+export default MapTypeModal;
 
 const styles = StyleSheet.create({
   overlay: {

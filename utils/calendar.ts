@@ -5,6 +5,7 @@
 
 import * as Calendar from 'expo-calendar';
 import { Platform, Alert } from 'react-native';
+import { logger } from '@/utils/logger';
 
 export interface CalendarEvent {
   title: string;
@@ -33,7 +34,7 @@ export async function requestCalendarPermissions(): Promise<boolean> {
       return false;
     }
   } catch (error) {
-    console.error('Error requesting calendar permissions:', error);
+    logger.error('Error requesting calendar permissions:', error);
     return false;
   }
 }
@@ -61,7 +62,7 @@ async function getDefaultCalendarId(): Promise<string | null> {
 
     return defaultCalendar.id;
   } catch (error) {
-    console.error('Error getting calendars:', error);
+    logger.error('Error getting calendars:', error);
     return null;
   }
 }
@@ -122,7 +123,7 @@ export async function addEventToCalendar(event: CalendarEvent): Promise<boolean>
 
     return false;
   } catch (error) {
-    console.error('Error adding event to calendar:', error);
+    logger.error('Error adding event to calendar:', error);
     Alert.alert(
       'Erreur',
       'Impossible d\'ajouter l\'événement au calendrier.',
