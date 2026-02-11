@@ -2,8 +2,9 @@
  * Event Detail Page
  */
 
-import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, ActivityIndicator, Linking, Image, Alert, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { ScrollView, StyleSheet, ActivityIndicator, Linking, Alert, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,27 +34,27 @@ export default function EventDetailScreen() {
   const isCancelled = Boolean(data?.event?.cancelled_at);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  const handleOpenMaps = () => {
+  const handleOpenMaps = useCallback(() => {
     if (!data?.event) return;
     const { latitude, longitude } = data.event;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
     Linking.openURL(url);
-  };
+  }, [data?.event]);
 
-  const handleRegister = () => {
+  const handleRegister = useCallback(() => {
     if (!data?.event?.details?.registration_link) return;
     Linking.openURL(data.event.details.registration_link);
-  };
+  }, [data?.event?.details?.registration_link]);
 
-  const handleEmail = () => {
+  const handleEmail = useCallback(() => {
     if (!data?.event?.pastor_email) return;
     Linking.openURL(`mailto:${data.event.pastor_email}`);
-  };
+  }, [data?.event?.pastor_email]);
 
-  const handleChurchPhone = () => {
+  const handleChurchPhone = useCallback(() => {
     if (!data?.event?.church?.details?.phone) return;
     Linking.openURL(`tel:${data.event.church.details.phone}`);
-  };
+  }, [data?.event?.church?.details?.phone]);
 
   const handleAddToCalendar = async () => {
     if (!data?.event) return;
@@ -70,7 +71,7 @@ export default function EventDetailScreen() {
         location = event.details.address;
         // Only add postal code and city if not already in address
         if (event.details.postal_code && event.details.city &&
-            !event.details.address.includes(event.details.postal_code)) {
+          !event.details.address.includes(event.details.postal_code)) {
           location += `, ${event.details.postal_code} ${event.details.city}`;
         }
       }
@@ -103,7 +104,7 @@ export default function EventDetailScreen() {
     }
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
       await Promise.all([
@@ -113,7 +114,7 @@ export default function EventDetailScreen() {
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [refetch, refetchInterest]);
 
   const handleToggleInterest = async () => {
     try {
@@ -270,7 +271,9 @@ export default function EventDetailScreen() {
         <Image
           source={{ uri: event.details.image_url }}
           style={styles.image}
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
         />
       )}
 
@@ -612,12 +615,12 @@ export default function EventDetailScreen() {
                   {event.details.address}
                   {/* Only show postal code and city if not already in address */}
                   {event.details.postal_code && event.details.city &&
-                   !event.details.address?.includes(event.details.postal_code) && (
-                    <>
-                      {'\n'}
-                      {event.details.postal_code} {event.details.city}
-                    </>
-                  )}
+                    !event.details.address?.includes(event.details.postal_code) && (
+                      <>
+                        {'\n'}
+                        {event.details.postal_code} {event.details.city}
+                      </>
+                    )}
                 </Text>
 
                 {/* Mini Map */}

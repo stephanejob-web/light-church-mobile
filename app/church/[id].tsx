@@ -2,7 +2,7 @@
  * Church Detail Page
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ScrollView, StyleSheet, ActivityIndicator, Linking, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useLocalSearchParams } from 'expo-router';
@@ -17,36 +17,36 @@ export default function ChurchDetailScreen() {
   const { data, isLoading, error, refetch } = useChurchDetail(Number(id));
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleOpenMaps = () => {
+  const handleOpenMaps = useCallback(() => {
     if (!data?.church) return;
     const { latitude, longitude } = data.church;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
     Linking.openURL(url);
-  };
+  }, [data?.church]);
 
-  const handleCall = () => {
+  const handleCall = useCallback(() => {
     if (!data?.church?.details?.phone) return;
     Linking.openURL(`tel:${data.church.details.phone}`);
-  };
+  }, [data?.church?.details?.phone]);
 
-  const handleWebsite = () => {
+  const handleWebsite = useCallback(() => {
     if (!data?.church?.details?.website) return;
     Linking.openURL(data.church.details.website);
-  };
+  }, [data?.church?.details?.website]);
 
-  const handleEmail = () => {
+  const handleEmail = useCallback(() => {
     if (!data?.church?.email) return;
     Linking.openURL(`mailto:${data.church.email}`);
-  };
+  }, [data?.church?.email]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
       await refetch();
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [refetch]);
 
   if (isLoading) {
     return (
