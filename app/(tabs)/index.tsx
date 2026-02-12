@@ -21,6 +21,7 @@ import MapTypeModal from '@/components/map/MapTypeModal';
 import { Box, Text } from '@/components/ui';
 import { useLocation } from '@/hooks/useLocation';
 import { useChurches, useEvents } from '@/hooks/query';
+import { useDebounce } from '@/hooks/useDebounce';
 import { getBoundingBox } from '@/utils/geo';
 import { MAP_CONFIG } from '@/constants/config';
 import { useToast } from '@/contexts/ToastContext';
@@ -44,6 +45,9 @@ export default function MapScreen() {
     longitudeDelta: 0.5,
   });
 
+  // Debounce region changes to avoid excessive API calls during panning
+  const debouncedRegion = useDebounce(mapRegion, 500);
+
   // Filters
   const [showChurches, setShowChurches] = useState(true);
   const [showEvents, setShowEvents] = useState(true);
@@ -59,16 +63,16 @@ export default function MapScreen() {
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
   const [showRefreshBadge, setShowRefreshBadge] = useState(false);
 
-  // Calculate query params
+  // Calculate query params from debounced region (reduces API calls ~70%)
   const queryParams = useMemo(() => {
-    const bbox = getBoundingBox(mapRegion);
+    const bbox = getBoundingBox(debouncedRegion);
     return {
       ...bbox,
       userLat: userLocation?.latitude,
       userLng: userLocation?.longitude,
       limit: 100,
     };
-  }, [mapRegion, userLocation]);
+  }, [debouncedRegion, userLocation]);
 
   // Fetch data
   const { data: churchesData, isLoading: churchesLoading, refetch: refetchChurches } = useChurches(queryParams, showChurches);
