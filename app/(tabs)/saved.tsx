@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Box, Text } from '@/components/ui';
-import { ListSkeleton } from '@/components/ui/Skeleton';
+import { ListSkeleton } from '@/components/Skeleton';
 import EventCard from '@/components/cards/EventCard';
 import { useInterestedEvents, useRemoveInterest } from '@/hooks/query/useInterestedEvents';
 import { useToast } from '@/contexts/ToastContext';

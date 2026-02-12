@@ -1,15 +1,17 @@
+/**
+ * Onboarding Screen
+ * Clean white theme — Apple style
+ */
+
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity, Animated, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Text } from '@/components/ui';
 import { fetchStats } from '@/services/mapService';
 
 const ONBOARDING_KEY = 'hasCompletedOnboarding';
-const { width } = Dimensions.get('window');
 
 /** Animate a number from 0 → target over ~1.2s */
 function useCountUp(target: number, duration = 1200) {
@@ -53,29 +55,20 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  // Stats from API
   const [churches, setChurches] = useState(0);
   const [events, setEvents] = useState(0);
-
-  // Fade-in animation
   const [fadeAnim] = useState(() => new Animated.Value(0));
 
-  // Animated counter values
   const displayChurches = useCountUp(churches);
   const displayEvents = useCountUp(events);
 
   useEffect(() => {
-    // Fetch live stats
     fetchStats()
       .then(data => {
         if (data.success && data.stats) {
           setChurches(data.stats.churches || 0);
           const s = data.stats as Record<string, number>;
-          setEvents(
-            s.events ||
-            (s.ongoingEvents || 0) + (s.upcomingEvents || 0) ||
-            0
-          );
+          setEvents(s.events || (s.ongoingEvents || 0) + (s.upcomingEvents || 0) || 0);
         }
       })
       .catch(() => {
@@ -83,7 +76,6 @@ export default function OnboardingScreen() {
         setEvents(39878);
       });
 
-    // Fade in content
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 800,
@@ -96,153 +88,113 @@ export default function OnboardingScreen() {
     router.replace('/(tabs)');
   };
 
-  const handleDiscoverMap = async () => {
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-    router.replace('/(tabs)');
-  };
-
-
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#0F172A', '#020617']}
-        style={styles.background}
-      />
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        {/* Logo */}
+        <Image
+          source={require('@/assets/images/icon.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
 
-      <Animated.View style={[styles.content, { paddingTop: insets.top, paddingBottom: insets.bottom, opacity: fadeAnim }]}>
-        <View style={styles.headerSection}>
-          <Text style={styles.titleWhite}>L'information chrétienne</Text>
-          <Text style={styles.titleBlue}>enfin centralisée.</Text>
+        {/* Title */}
+        <Text style={styles.title}>
+          L'information chrétienne{'\n'}
+          <Text style={styles.titleAccent}>enfin centralisée.</Text>
+        </Text>
 
-          <Text style={styles.subtitle}>
-            Découvrez les églises et événements autour de vous sur une plateforme unique, moderne et ultra-rapide. Plus de données éparpillées, tout est ici.
-          </Text>
+        {/* Subtitle */}
+        <Text style={styles.subtitle}>
+          Découvrez les églises et événements autour de vous sur une plateforme unique, moderne et ultra-rapide. Plus de données éparpillées, tout est ici.
+        </Text>
 
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={handleStart}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="map-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.primaryButtonText}>Lancer l'expérience</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.statsSection}>
-          <View style={styles.statItem}>
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBlock}>
             <View style={styles.statValueRow}>
-              <Text style={styles.statValue}>{formatNumber(displayChurches)}</Text>
+              <Text style={styles.statNumber}>{formatNumber(displayChurches)}</Text>
               <View style={styles.liveBadge}>
                 <View style={styles.liveDot} />
                 <Text style={styles.liveText}>LIVE</Text>
               </View>
             </View>
-            <Text style={styles.statLabel}>Églises indexées</Text>
+            <Text style={styles.statUnit}>Églises indexées</Text>
           </View>
 
-          <View style={styles.statDivider} />
+          <View style={styles.statSeparator} />
 
-          <View style={styles.statItem}>
+          <View style={styles.statBlock}>
             <View style={styles.statValueRow}>
-              <Text style={styles.statValue}>{formatNumber(displayEvents)}</Text>
+              <Text style={styles.statNumber}>{formatNumber(displayEvents)}</Text>
               <View style={styles.liveBadge}>
                 <View style={styles.liveDot} />
                 <Text style={styles.liveText}>LIVE</Text>
               </View>
             </View>
-            <Text style={styles.statLabel}>Événements actifs</Text>
+            <Text style={styles.statUnit}>Événements actifs</Text>
           </View>
         </View>
-      </Animated.View >
-    </View >
+      </Animated.View>
+
+      {/* CTA */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.button} onPress={handleStart} activeOpacity={0.8}>
+          <Ionicons name="compass-outline" size={20} color="#FFFFFF" />
+          <Text style={styles.buttonText}>Commencer</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
-  },
-  background: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: 'space-between',
-  },
-  headerSection: {
     alignItems: 'center',
-    marginTop: 'auto',
-    marginBottom: 40, // Fixed margin to prevent pushing stats too far
+    justifyContent: 'center',
+    paddingHorizontal: 28,
   },
-  titleWhite: {
-    fontSize: 28, // Slightly smaller for better fit
-    fontWeight: '800',
-    color: '#FFFFFF',
+  logo: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1C1C1E',
     textAlign: 'center',
     lineHeight: 36,
   },
-  titleBlue: {
-    fontSize: 28, // Slightly smaller
-    fontWeight: '800',
-    color: '#3B82F6',
-    textAlign: 'center',
-    lineHeight: 36,
+  titleAccent: {
+    color: '#4285F4',
   },
   subtitle: {
     fontSize: 15,
-    color: '#9CA3AF',
+    lineHeight: 23,
+    color: '#8E8E93',
     textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 32,
-    lineHeight: 22,
+    marginTop: 14,
     maxWidth: 320,
   },
-  actions: {
-    flexDirection: 'row',
-    gap: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButton: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 14,
-    paddingHorizontal: 36,
-    borderRadius: 999,
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  statsSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 60,
+    marginTop: 32,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     gap: 20,
   },
-  statItem: {
+  statBlock: {
     alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   statValueRow: {
     flexDirection: 'row',
@@ -250,14 +202,14 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 4,
   },
-  statValue: {
+  statNumber: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#1C1C1E',
     fontVariant: ['tabular-nums'],
   },
   liveBadge: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: '#DCFCE7',
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 4,
@@ -269,17 +221,40 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#EF4444',
+    backgroundColor: '#22C55E',
   },
   liveText: {
     fontSize: 8,
     fontWeight: '700',
-    color: '#EF4444',
+    color: '#22C55E',
   },
-  statLabel: {
+  statUnit: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#6B7280',
+    color: '#8E8E93',
     textAlign: 'center',
+  },
+  statSeparator: {
+    width: 1,
+    height: 36,
+    backgroundColor: '#D1D1D6',
+  },
+  footer: {
+    paddingHorizontal: 28,
+    paddingBottom: 24,
+  },
+  button: {
+    backgroundColor: '#4285F4',
+    borderRadius: 14,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  buttonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
