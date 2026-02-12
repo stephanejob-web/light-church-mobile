@@ -39,27 +39,53 @@ export async function requestCalendarPermissions(): Promise<boolean> {
 }
 
 /**
- * Get default calendar ID
+ * Get a writable calendar ID
+ * Filters out read-only calendars (Birthdays, Holidays, subscribed, etc.)
  */
-async function getDefaultCalendarId(): Promise<string | null> {
+async function getWritableCalendarId(): Promise<string | null> {
   try {
     const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
 
-    if (calendars.length === 0) {
+    // Only keep calendars where we can actually create events
+    const writable = calendars.filter(cal => cal.allowsModifications);
+
+    if (writable.length === 0) {
+      // No writable calendar exists — create a local one (iOS needs this sometimes)
+      if (Platform.OS === 'ios') {
+        const defaultSource = calendars.find(
+          cal => cal.source.type === Calendar.CalendarType.LOCAL
+        )?.source ?? calendars[0]?.source;
+
+        if (!defaultSource) return null;
+
+        const newCalendarId = await Calendar.createCalendarAsync({
+          title: 'Light Church',
+          color: '#4285F4',
+          entityType: Calendar.EntityTypes.EVENT,
+          source: {
+            name: defaultSource.name,
+            type: defaultSource.type as string,
+            isLocalAccount: defaultSource.isLocalAccount,
+          },
+          name: 'Light Church',
+          accessLevel: Calendar.CalendarAccessLevel.OWNER,
+          ownerAccount: 'local',
+        });
+        return newCalendarId;
+      }
       return null;
     }
 
-    // Try to find default calendar
-    let defaultCalendar = calendars.find(
-      cal => cal.source.name === 'Default' || cal.isPrimary
+    // Prefer: primary > iCloud/Google > first writable
+    const primary = writable.find(cal => cal.isPrimary);
+    if (primary) return primary.id;
+
+    const cloudCalendar = writable.find(
+      cal => cal.source.name === 'iCloud' || cal.source.name === 'Google'
     );
+    if (cloudCalendar) return cloudCalendar.id;
 
-    // Fallback to first available calendar
-    if (!defaultCalendar) {
-      defaultCalendar = calendars[0];
-    }
-
-    return defaultCalendar.id;
+    return writable[0].id;
   } catch (error) {
     console.error('Error getting calendars:', error);
     return null;
@@ -77,8 +103,8 @@ export async function addEventToCalendar(event: CalendarEvent): Promise<boolean>
       return false;
     }
 
-    // Get default calendar
-    const calendarId = await getDefaultCalendarId();
+    // Get a writable calendar (filters out read-only ones)
+    const calendarId = await getWritableCalendarId();
     if (!calendarId) {
       Alert.alert(
         'Erreur',

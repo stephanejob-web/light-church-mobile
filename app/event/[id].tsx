@@ -63,7 +63,20 @@ export default function EventDetailScreen() {
     try {
       const event = data.event;
       const startDate = new Date(event.start_datetime);
-      const endDate = new Date(event.end_datetime);
+
+      // end_datetime can be null/undefined at runtime despite the type — fallback to start + 2h
+      let endDate: Date;
+      if (event.end_datetime) {
+        endDate = new Date(event.end_datetime);
+      } else {
+        endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+      }
+
+      // Guard against Invalid Date (corrupt data from API)
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        Alert.alert('Erreur', 'Les dates de cet événement sont invalides.');
+        return;
+      }
 
       // Build location string
       let location = '';
