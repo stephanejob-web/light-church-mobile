@@ -66,6 +66,18 @@ function AppContent() {
               headerShown: false,
             }}
           />
+          <Stack.Screen
+            name="church"
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="event"
+            options={{
+              headerShown: false,
+            }}
+          />
         </Stack>
         <StatusBar style="auto" />
         <OfflineBanner />
