@@ -178,7 +178,7 @@ export default function SavedScreen() {
           Aucun événement enregistré
         </Text>
         <Text variant="body" color="textSecondary" textAlign="center" style={styles.description}>
-          Cliquez sur "Ça m'intéresse" sur un événement pour le retrouver ici.
+          {'Cliquez sur "Ça m\'intéresse" sur un événement pour le retrouver ici.'}
         </Text>
       </Box>
     );

@@ -43,7 +43,7 @@ function AppContent() {
       });
     }, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   return (
     <ThemeProvider theme={theme}>

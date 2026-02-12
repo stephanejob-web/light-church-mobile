@@ -239,7 +239,7 @@ export default function EventDetailScreen() {
     return (
       <Box flex={1} justifyContent="center" alignItems="center" backgroundColor="background" padding="m">
         <Text variant="body" color="error">
-          Erreur lors du chargement de l'événement
+          {"Erreur lors du chargement de l'événement"}
         </Text>
       </Box>
     );
@@ -321,7 +321,7 @@ export default function EventDetailScreen() {
             <Box flexDirection="row" alignItems="center" marginBottom="xs">
               <Ionicons name="information-circle" size={18} color="#EA4335" />
               <Text variant="subtitle" fontWeight="700" marginLeft="xs" style={{ color: '#EA4335' }}>
-                Raison de l'annulation
+                {"Raison de l'annulation"}
               </Text>
             </Box>
             <Text variant="body" color="textSecondary">
@@ -500,7 +500,7 @@ export default function EventDetailScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="create-outline" size={20} color="#4285F4" style={buttonStyles.icon} />
-            <Text style={buttonStyles.buttonTextSecondary}>S'inscrire à l'événement</Text>
+            <Text style={buttonStyles.buttonTextSecondary}>{"S'inscrire à l'événement"}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -586,7 +586,7 @@ export default function EventDetailScreen() {
       {/* Details - Google Maps Style */}
       <Card marginHorizontal="m" marginBottom="m">
         <Text variant="subtitle" marginBottom="m">
-          Détails de l'événement
+          {"Détails de l'événement"}
         </Text>
 
         <Box gap="m">
@@ -689,7 +689,7 @@ export default function EventDetailScreen() {
                   </Text>
                 )}
                 <Text variant="caption" color="textTertiary" marginTop="s">
-                  Voir le profil complet de l'église, ses horaires et son adresse.
+                  {"Voir le profil complet de l'église, ses horaires et son adresse."}
                 </Text>
               </Box>
               <Ionicons name="chevron-forward" size={24} color="#4285F4" />
