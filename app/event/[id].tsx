@@ -3,13 +3,14 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { ScrollView, StyleSheet, ActivityIndicator, Linking, Alert, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
+import { ScrollView, StyleSheet, Linking, Alert, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Box, Text, Card } from '@/components/ui';
+import { DetailSkeleton } from '@/components/ui/Skeleton';
 import { useEventDetail, useIsInterested, useToggleEventInterest } from '@/hooks/query';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -231,11 +232,7 @@ export default function EventDetailScreen() {
   };
 
   if (isLoading) {
-    return (
-      <Box flex={1} justifyContent="center" alignItems="center" backgroundColor="background">
-        <ActivityIndicator size="large" color="#4285F4" />
-      </Box>
-    );
+    return <DetailSkeleton />;
   }
 
   if (error || !data?.event) {

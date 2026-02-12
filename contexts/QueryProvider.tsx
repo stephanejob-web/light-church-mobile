@@ -1,12 +1,15 @@
 /**
  * React Query Provider with React Native setup
+ * Includes offline persistence for instant app launch
  */
 
 import React, { useEffect } from 'react';
 import { AppState, Platform, AppStateStatus } from 'react-native';
-import { QueryClientProvider, onlineManager, focusManager } from '@tanstack/react-query';
+import { onlineManager, focusManager } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import * as Network from 'expo-network';
 import { queryClient } from '@/lib/queryClient';
+import { asyncStoragePersister } from '@/lib/queryPersister';
 
 // Configure onlineManager for React Native
 onlineManager.setEventListener((setOnline) => {
@@ -42,8 +45,14 @@ export function QueryProvider({ children }: QueryProviderProps) {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: asyncStoragePersister,
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+      }}
+    >
       {children}
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }

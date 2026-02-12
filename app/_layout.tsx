@@ -9,9 +9,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAxiosInterceptor } from '@/hooks/useAxiosInterceptor';
+import { useNotificationDeepLink } from '@/hooks/useNotificationDeepLink';
 import { QueryProvider } from '@/contexts/QueryProvider';
 import { TimeProvider } from '@/contexts/TimeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import theme from '@/theme/theme';
 
 const ONBOARDING_KEY = 'hasCompletedOnboarding';
@@ -27,7 +30,11 @@ function AppContent() {
   // Configure axios interceptors with toast context
   useAxiosInterceptor();
 
-  // DEV: always show onboarding — remove this for production
+  // Handle push notification deep links
+  useNotificationDeepLink();
+
+  // TODO: remettre le check AsyncStorage avant la mise en production
+  // DEV: toujours afficher l'onboarding
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace('/onboarding');
@@ -58,6 +65,7 @@ function AppContent() {
           />
         </Stack>
         <StatusBar style="auto" />
+        <OfflineBanner />
       </NavigationThemeProvider>
     </ThemeProvider>
   );
@@ -65,14 +73,16 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryProvider>
-        <TimeProvider>
-          <ToastProvider>
-            <AppContent />
-          </ToastProvider>
-        </TimeProvider>
-      </QueryProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryProvider>
+          <TimeProvider>
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
+          </TimeProvider>
+        </QueryProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
