@@ -10,7 +10,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
-  Image,
   Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -88,14 +87,9 @@ export default function AboutScreen() {
       >
         {/* Hero */}
         <View style={[styles.hero, { paddingTop: insets.top + 32 }]}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
           <Text style={styles.heroTitle}>Light Church</Text>
           <Text style={styles.heroTagline}>
-            L'information chrétienne{'\n'}
+            {"L'information chrétienne\n"}
             <Text style={styles.heroAccent}>enfin centralisée.</Text>
           </Text>
           <Text style={styles.heroVersion}>Version {APP_VERSION}</Text>
@@ -212,12 +206,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E5E5EA',
-  },
-  logo: {
-    width: 64,
-    height: 64,
-    borderRadius: 14,
-    marginBottom: 12,
   },
   heroTitle: {
     fontSize: 22,

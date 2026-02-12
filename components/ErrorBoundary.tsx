@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <Ionicons name="warning-outline" size={48} color="#EA4335" />
           <Text style={styles.title}>Oups, une erreur est survenue</Text>
           <Text style={styles.message}>
-            L'application a rencontré un problème inattendu.
+            {"L'application a rencontré un problème inattendu."}
           </Text>
           <TouchableOpacity style={styles.button} onPress={this.handleRetry} activeOpacity={0.8}>
             <Ionicons name="refresh" size={18} color="#FFFFFF" />

@@ -6,7 +6,7 @@
  */
 
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { View, StyleSheet, RefreshControl, Alert, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, RefreshControl, Alert, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { FlashList, type FlashListProps } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -178,7 +178,7 @@ export default function SavedScreen() {
           Aucun événement enregistré
         </Text>
         <Text variant="body" color="textSecondary" textAlign="center" style={styles.description}>
-          Cliquez sur "Ça m'intéresse" sur un événement pour le retrouver ici.
+          {'Cliquez sur "Ça m\'intéresse" sur un événement pour le retrouver ici.'}
         </Text>
       </Box>
     );

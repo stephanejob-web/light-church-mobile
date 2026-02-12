@@ -81,7 +81,7 @@ export default function OnboardingScreen() {
       duration: 800,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [fadeAnim]);
 
   const handleStart = async () => {
     await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
@@ -100,7 +100,7 @@ export default function OnboardingScreen() {
 
         {/* Title */}
         <Text style={styles.title}>
-          L'information chrétienne{'\n'}
+          {"L'information chrétienne\n"}
           <Text style={styles.titleAccent}>enfin centralisée.</Text>
         </Text>
 
