@@ -70,7 +70,12 @@ export default function OnboardingScreen() {
       .then(data => {
         if (data.success && data.stats) {
           setChurches(data.stats.churches || 0);
-          setEvents((data.stats.ongoing_events || 0) + (data.stats.upcoming_events || 0));
+          const s = data.stats as Record<string, number>;
+          setEvents(
+            s.events ||
+            (s.ongoingEvents || 0) + (s.upcomingEvents || 0) ||
+            0
+          );
         }
       })
       .catch(() => {
@@ -126,7 +131,6 @@ export default function OnboardingScreen() {
         </View>
 
         <View style={styles.statsSection}>
-          {/* Churches Stat */}
           <View style={styles.statItem}>
             <View style={styles.statValueRow}>
               <Text style={styles.statValue}>{formatNumber(displayChurches)}</Text>
@@ -135,10 +139,11 @@ export default function OnboardingScreen() {
                 <Text style={styles.liveText}>LIVE</Text>
               </View>
             </View>
-            <Text style={styles.statLabel}>ÉGLISES INDEXÉES</Text>
+            <Text style={styles.statLabel}>Églises indexées</Text>
           </View>
 
-          {/* Events Stat */}
+          <View style={styles.statDivider} />
+
           <View style={styles.statItem}>
             <View style={styles.statValueRow}>
               <Text style={styles.statValue}>{formatNumber(displayEvents)}</Text>
@@ -147,7 +152,7 @@ export default function OnboardingScreen() {
                 <Text style={styles.liveText}>LIVE</Text>
               </View>
             </View>
-            <Text style={styles.statLabel}>ÉVÉNEMENTS ACTIFS</Text>
+            <Text style={styles.statLabel}>Événements actifs</Text>
           </View>
         </View>
       </Animated.View >
@@ -226,14 +231,18 @@ const styles = StyleSheet.create({
   },
   statsSection: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Use space-between for better edge alignment
-    width: '100%',
-    paddingHorizontal: 8,
-    paddingBottom: 80, // Massive padding to lift from bottom
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 60,
+    gap: 20,
   },
   statItem: {
-    flex: 1,
     alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   statValueRow: {
     flexDirection: 'row',
@@ -242,18 +251,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statValue: {
-    fontSize: 28, // Slightly smaller to ensure fit
+    fontSize: 22,
     fontWeight: '700',
     color: '#FFFFFF',
     fontVariant: ['tabular-nums'],
   },
   liveBadge: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.4)',
     paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
@@ -265,16 +272,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
   },
   liveText: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '700',
     color: '#EF4444',
   },
   statLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#9CA3AF',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
     textAlign: 'center',
   },
 });
