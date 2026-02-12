@@ -100,7 +100,7 @@ export default function OnboardingScreen() {
 
         {/* Title */}
         <Text style={styles.title}>
-          L'information chrétienne{'\n'}
+          {"L'information chrétienne\n"}
           <Text style={styles.titleAccent}>enfin centralisée.</Text>
         </Text>
 

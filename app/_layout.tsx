@@ -33,11 +33,14 @@ function AppContent() {
   // Handle push notification deep links
   useNotificationDeepLink();
 
-  // TODO: remettre le check AsyncStorage avant la mise en production
-  // DEV: toujours afficher l'onboarding
+  // Redirect to onboarding on first launch
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace('/onboarding');
+      AsyncStorage.getItem(ONBOARDING_KEY).then(value => {
+        if (value !== 'true') {
+          router.replace('/onboarding');
+        }
+      });
     }, 0);
     return () => clearTimeout(timer);
   }, []);

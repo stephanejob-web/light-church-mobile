@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { ScrollView, StyleSheet, Linking, Alert, RefreshControl, TouchableOpacity, View, Platform } from 'react-native';
+import { ScrollView, StyleSheet, Linking, Alert, RefreshControl, TouchableOpacity, View, Platform, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useLocalSearchParams, useRouter } from 'expo-router';
