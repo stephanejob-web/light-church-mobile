@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SearchInputProps {
@@ -26,13 +26,19 @@ export default function SearchInput({
     onChangeText('');
   };
 
+  // Inline resultCount into placeholder when active
+  const displayPlaceholder =
+    resultCount !== undefined && value.length > 0
+      ? `${resultCount} résultat${resultCount !== 1 ? 's' : ''} pour "${value}"`
+      : placeholder;
+
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
         {/* Search Icon */}
         <Ionicons
           name="search-outline"
-          size={20}
+          size={18}
           color="#5F6368"
           style={styles.searchIcon}
         />
@@ -42,7 +48,7 @@ export default function SearchInput({
           style={styles.input}
           value={value}
           onChangeText={onChangeText}
-          placeholder={placeholder}
+          placeholder={displayPlaceholder}
           placeholderTextColor="#80868B"
           autoCapitalize="none"
           autoCorrect={false}
@@ -58,20 +64,10 @@ export default function SearchInput({
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             activeOpacity={0.6}
           >
-            <Ionicons name="close-circle" size={20} color="#5F6368" />
+            <Ionicons name="close-circle" size={18} color="#5F6368" />
           </TouchableOpacity>
         )}
       </View>
-
-      {/* Result count (optional) */}
-      {resultCount !== undefined && value.length > 0 && (
-        <View style={styles.resultCount}>
-          <Ionicons name="filter-outline" size={14} color="#5F6368" />
-          <Text style={styles.resultText}>
-            {resultCount} résultat{resultCount !== 1 ? 's' : ''}
-          </Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -79,8 +75,8 @@ export default function SearchInput({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 8,
+    paddingBottom: 4,
     backgroundColor: '#FFFFFF',
   },
   inputContainer: {
@@ -89,14 +85,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F3F4',
     borderRadius: 8,
     paddingHorizontal: 12,
-    height: 40,
+    height: 36,
   },
   searchIcon: {
     marginRight: 8,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: '#202124',
     paddingVertical: 0,
   },
@@ -104,16 +100,5 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  resultCount: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-    paddingLeft: 4,
-  },
-  resultText: {
-    fontSize: 12,
-    color: '#5F6368',
-    marginLeft: 4,
   },
 });

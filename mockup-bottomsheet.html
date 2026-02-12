@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bottom Sheet - Nouvelle Interface</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    gap: 40px;
+    flex-wrap: wrap;
+    padding: 20px;
+  }
+
+  .label {
+    color: #fff;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: #E8EAED;
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5), inset 0 0 0 3px #1a1a1a;
+  }
+
+  /* Fake map background */
+  .map-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 25%, #a5d6a7 50%, #e8eaed 75%),
+      repeating-linear-gradient(0deg, transparent, transparent 80px, #ddd 80px, #ddd 81px),
+      repeating-linear-gradient(90deg, transparent, transparent 80px, #ddd 80px, #ddd 81px);
+    background-size: 100% 100%, 100% 100%, 100% 100%;
+  }
+
+  /* Map elements */
+  .map-road {
+    position: absolute;
+    background: #fff;
+    border-radius: 2px;
+  }
+  .road-h1 { top: 200px; left: 0; right: 0; height: 6px; }
+  .road-h2 { top: 350px; left: 0; right: 0; height: 4px; opacity: 0.7; }
+  .road-v1 { top: 0; bottom: 0; left: 120px; width: 6px; }
+  .road-v2 { top: 0; bottom: 0; left: 260px; width: 4px; opacity: 0.7; }
+
+  /* Map markers */
+  .marker {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .marker-church { background: #4285F4; top: 180px; left: 90px; }
+  .marker-church2 { background: #4285F4; top: 280px; left: 220px; }
+  .marker-event { background: #EA4335; top: 150px; left: 200px; }
+  .marker-event2 { background: #EA4335; top: 320px; left: 140px; }
+  .marker-inner {
+    transform: rotate(45deg);
+    color: #fff;
+    font-size: 14px;
+  }
+
+  /* iOS status bar */
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 54px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 30px 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #000;
+    z-index: 10;
+  }
+
+  /* Search bar on map */
+  .map-search {
+    position: absolute;
+    top: 60px;
+    left: 16px;
+    right: 16px;
+    height: 48px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+    z-index: 5;
+  }
+  .map-search-icon { color: #4285F4; font-size: 18px; }
+  .map-search-text { color: #80868B; font-size: 15px; }
+
+  /* Map buttons */
+  .map-btn {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    font-size: 18px;
+  }
+  .btn-location { right: 16px; top: 120px; }
+  .btn-refresh { right: 16px; top: 172px; }
+  .btn-layers { right: 16px; top: 224px; }
+
+  /* ==================== */
+  /* BOTTOM SHEET - NEW   */
+  /* ==================== */
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -3px 12px rgba(0,0,0,0.1);
+    z-index: 20;
+  }
+
+  /* Handle */
+  .handle {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 4px;
+  }
+  .handle-bar {
+    width: 40px;
+    height: 4px;
+    background: #DADCE0;
+    border-radius: 2px;
+  }
+
+  /* Search inside bottom sheet */
+  .bs-search {
+    padding: 4px 16px 4px;
+  }
+  .bs-search-input {
+    display: flex;
+    align-items: center;
+    background: #F1F3F4;
+    border-radius: 8px;
+    padding: 0 12px;
+    height: 36px;
+    gap: 8px;
+  }
+  .bs-search-icon { color: #5F6368; font-size: 16px; }
+  .bs-search-text { color: #80868B; font-size: 14px; flex: 1; }
+
+  /* Chips row */
+  .chips-row {
+    display: flex;
+    gap: 8px;
+    padding: 6px 16px 8px;
+    overflow-x: auto;
+    border-bottom: 1px solid #E8EAED;
+    align-items: center;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .chip-active {
+    background: #E8F0FE;
+    border-color: #4285F4;
+    color: #4285F4;
+  }
+  .chip-inactive {
+    background: #F1F3F4;
+    border-color: #DADCE0;
+    color: #5F6368;
+  }
+  .chip-check { font-size: 14px; }
+  .chip-divider {
+    width: 1px;
+    height: 20px;
+    background: #DADCE0;
+    flex-shrink: 0;
+  }
+
+  /* Cards */
+  .card-list {
+    overflow-y: auto;
+    padding: 0 0 34px;
+  }
+  .card {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #F1F3F4;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .card:active { background: #F8F9FA; }
+
+  /* Church card icon */
+  .card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+  }
+  .card-icon-church { background: #E8F0FE; }
+  .card-icon-event { background: #FCE8E6; }
+
+  /* Event date badge */
+  .date-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: #FFF;
+    border: 1px solid #E8EAED;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .date-month { font-size: 10px; font-weight: 600; color: #EA4335; text-transform: uppercase; }
+  .date-day { font-size: 18px; font-weight: 700; color: #202124; line-height: 1; }
+
+  .card-content { flex: 1; min-width: 0; }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #202124;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-subtitle {
+    font-size: 13px;
+    color: #5F6368;
+    margin-top: 2px;
+  }
+  .card-subtitle .distance {
+    color: #4285F4;
+    font-weight: 500;
+  }
+  .card-location {
+    font-size: 12px;
+    color: #80868B;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .card-chevron {
+    color: #BDC1C6;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  /* iOS home indicator */
+  .home-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 5px;
+    background: #000;
+    border-radius: 3px;
+    opacity: 0.2;
+    z-index: 30;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 83px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 0.5px solid #E8EAED;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    padding-top: 8px;
+    z-index: 25;
+  }
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .tab-icon { font-size: 22px; }
+  .tab-label { font-size: 10px; font-weight: 500; }
+  .tab-active .tab-icon, .tab-active .tab-label { color: #4285F4; }
+  .tab-inactive .tab-icon, .tab-inactive .tab-label { color: #9AA0A6; }
+
+  /* ==================== */
+  /* OLD VERSION STYLES   */
+  /* ==================== */
+  .old-header {
+    padding: 16px;
+    border-bottom: 1px solid #DADCE0;
+  }
+  .old-header-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #202124;
+  }
+  .old-header-subtitle {
+    font-size: 14px;
+    color: #5F6368;
+    margin-top: 4px;
+  }
+  .old-search {
+    padding: 12px 16px 8px;
+  }
+  .old-search-input {
+    display: flex;
+    align-items: center;
+    background: #F1F3F4;
+    border-radius: 8px;
+    padding: 0 12px;
+    height: 40px;
+    gap: 8px;
+  }
+  .old-chips {
+    padding: 12px 16px;
+    gap: 8px;
+    border-bottom: 1px solid #E8EAED;
+    display: flex;
+    align-items: center;
+  }
+  .old-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Comparison badge */
+  .version-badge {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 30;
+    backdrop-filter: blur(10px);
+  }
+
+  /* Measurement arrows */
+  .measure {
+    position: absolute;
+    right: -50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 10px;
+    color: #EA4335;
+    font-weight: 600;
+    z-index: 30;
+  }
+  .measure-line {
+    width: 2px;
+    background: #EA4335;
+  }
+  .measure-label {
+    background: #EA4335;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  /* Wrapper */
+  .phone-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 850px) {
+    body { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== ANCIEN DESIGN ========== -->
+<div class="phone-wrapper">
+  <div class="label">Avant (actuel)</div>
+  <div class="phone">
+    <!-- Map background -->
+    <div class="map-bg">
+      <div class="map-road road-h1"></div>
+      <div class="map-road road-h2"></div>
+      <div class="map-road road-v1"></div>
+      <div class="map-road road-v2"></div>
+      <div class="marker marker-church"><span class="marker-inner">⛪</span></div>
+      <div class="marker marker-church2"><span class="marker-inner">⛪</span></div>
+      <div class="marker marker-event"><span class="marker-inner">🎵</span></div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:12px;">●●●●● WiFi 🔋</span>
+    </div>
+
+    <!-- Map search bar -->
+    <div class="map-search">
+      <span class="map-search-icon">📍</span>
+      <span class="map-search-text">Rechercher un lieu...</span>
+    </div>
+
+    <!-- Map buttons -->
+    <div class="map-btn btn-location">📌</div>
+    <div class="map-btn btn-refresh">🔄</div>
+
+    <!-- OLD Bottom Sheet - at 50% -->
+    <div class="bottom-sheet" style="height: 50%; top: auto;">
+      <div class="handle"><div class="handle-bar"></div></div>
+
+      <!-- OLD: Header (takes ~60px) -->
+      <div class="old-header" style="border-left: 3px solid #EA4335;">
+        <div class="old-header-title">45 résultats</div>
+        <div class="old-header-subtitle">Églises et événements</div>
+      </div>
+
+      <!-- OLD: Search bar (takes ~60px) -->
+      <div class="old-search" style="border-left: 3px solid #EA4335;">
+        <div class="old-search-input">
+          <span class="bs-search-icon">🔍</span>
+          <span style="color: #80868B; font-size: 15px;">Filtrer les résultats...</span>
+        </div>
+      </div>
+
+      <!-- OLD: Chips (takes ~50px) -->
+      <div class="old-chips" style="border-left: 3px solid #EA4335; overflow-x: auto;">
+        <span class="old-chip chip-active">✓ Églises (34)</span>
+        <span class="old-chip chip-active">✓ Événements (11)</span>
+        <span class="chip-divider"></span>
+        <span class="old-chip chip-active">✓ Plus proches</span>
+      </div>
+
+      <!-- Cards - very little space left -->
+      <div class="card-list" style="max-height: calc(100% - 230px); overflow-y: auto;">
+        <div class="card">
+          <div class="card-icon card-icon-church">⛪</div>
+          <div class="card-content">
+            <div class="card-title">Église de la Grâce</div>
+            <div class="card-subtitle">Évangélique • <span class="distance">0.3 km</span></div>
+            <div class="card-location">📍 Paris 11e</div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+        <div class="card">
+          <div class="date-badge">
+            <span class="date-month">Fév</span>
+            <span class="date-day">14</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">Concert de louange</div>
+            <div class="card-subtitle">18h00 • <span class="distance">1.2 km</span></div>
+            <div class="card-location">📍 Église Bethel, Lyon</div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+        <div class="card" style="opacity: 0.4;">
+          <div class="card-icon card-icon-church">⛪</div>
+          <div class="card-content">
+            <div class="card-title">Temple Protestant</div>
+            <div class="card-subtitle">Réformé • <span class="distance">2.1 km</span></div>
+            <div class="card-location">📍 Marseille</div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <div class="tab-item tab-active"><span class="tab-icon">🗺️</span><span class="tab-label">Découvrir</span></div>
+      <div class="tab-item tab-inactive"><span class="tab-icon">🔖</span><span class="tab-label">Enregistrés</span></div>
+      <div class="tab-item tab-inactive"><span class="tab-icon">ℹ️</span><span class="tab-label">À propos</span></div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<!-- ========== NOUVEAU DESIGN ========== -->
+<div class="phone-wrapper">
+  <div class="label">Apres (propose)</div>
+  <div class="phone">
+    <!-- Map background -->
+    <div class="map-bg">
+      <div class="map-road road-h1"></div>
+      <div class="map-road road-h2"></div>
+      <div class="map-road road-v1"></div>
+      <div class="map-road road-v2"></div>
+      <div class="marker marker-church"><span class="marker-inner">⛪</span></div>
+      <div class="marker marker-church2"><span class="marker-inner">⛪</span></div>
+      <div class="marker marker-event"><span class="marker-inner">🎵</span></div>
+      <div class="marker marker-event2"><span class="marker-inner">🎶</span></div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <span style="font-size:12px;">●●●●● WiFi 🔋</span>
+    </div>
+
+    <!-- Map search bar -->
+    <div class="map-search">
+      <span class="map-search-icon">📍</span>
+      <span class="map-search-text">Rechercher un lieu...</span>
+    </div>
+
+    <!-- Map buttons -->
+    <div class="map-btn btn-location">📌</div>
+    <div class="map-btn btn-refresh">🔄</div>
+    <div class="map-btn btn-layers">🗂️</div>
+
+    <!-- NEW Bottom Sheet - at 50% - OPTIMIZED -->
+    <div class="bottom-sheet" style="height: 50%; top: auto;">
+      <div class="handle"><div class="handle-bar"></div></div>
+
+      <!-- NEW: Compact search (36px height, less padding) -->
+      <div class="bs-search">
+        <div class="bs-search-input">
+          <span class="bs-search-icon">🔍</span>
+          <span class="bs-search-text">Filtrer les résultats...</span>
+        </div>
+      </div>
+
+      <!-- NEW: Compact chips (smaller padding) -->
+      <div class="chips-row">
+        <span class="chip chip-active"><span class="chip-check">✓</span> Églises (34)</span>
+        <span class="chip chip-active"><span class="chip-check">✓</span> Événements (11)</span>
+        <span class="chip-divider"></span>
+        <span class="chip chip-active"><span class="chip-check">✓</span> Plus proches</span>
+        <span class="chip chip-inactive">Plus récents</span>
+      </div>
+
+      <!-- NEW: More space for cards! -->
+      <div class="card-list" style="max-height: calc(100% - 100px); overflow-y: auto;">
+        <div class="card">
+          <div class="card-icon card-icon-church">⛪</div>
+          <div class="card-content">
+            <div class="card-title">Église de la Grâce</div>
+            <div class="card-subtitle">Évangélique • <span class="distance">0.3 km</span></div>
+            <div class="card-location">📍 Paris 11e</div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+        <div class="card">
+          <div class="date-badge">
+            <span class="date-month">Fév</span>
+            <span class="date-day">14</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">Concert de louange</div>
+            <div class="card-subtitle">18h00 • <span class="distance">1.2 km</span></div>
+            <div class="card-location">📍 Église Bethel, Lyon</div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+        <div class="card">
+          <div class="card-icon card-icon-church">⛪</div>
+          <div class="card-content">
+            <div class="card-title">Temple Protestant</div>
+            <div class="card-subtitle">Réformé • <span class="distance">2.1 km</span></div>
+            <div class="card-location">📍 Marseille</div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+        <div class="card">
+          <div class="date-badge">
+            <span class="date-month">Fév</span>
+            <span class="date-day">20</span>
+          </div>
+          <div class="card-content">
+            <div class="card-title">Étude biblique</div>
+            <div class="card-subtitle">19h30 • <span class="distance">3.4 km</span></div>
+            <div class="card-location">📍 Église Vie Nouvelle, Nantes</div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+        <div class="card" style="opacity: 0.5;">
+          <div class="card-icon card-icon-church">⛪</div>
+          <div class="card-content">
+            <div class="card-title">Assemblée de Dieu</div>
+            <div class="card-subtitle">Pentecôtiste • <span class="distance">4.7 km</span></div>
+            <div class="card-location">📍 Toulouse</div>
+          </div>
+          <span class="card-chevron">›</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <div class="tab-item tab-active"><span class="tab-icon">🗺️</span><span class="tab-label">Découvrir</span></div>
+      <div class="tab-item tab-inactive"><span class="tab-icon">🔖</span><span class="tab-label">Enregistrés</span></div>
+      <div class="tab-item tab-inactive"><span class="tab-icon">ℹ️</span><span class="tab-label">À propos</span></div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+</body>
+</html>

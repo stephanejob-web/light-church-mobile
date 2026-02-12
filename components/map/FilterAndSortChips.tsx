@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
   },
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   chipText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   chipTextActive: {
