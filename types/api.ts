@@ -39,8 +39,8 @@ export interface StatsResponse {
   success: boolean;
   stats: {
     churches: number;
-    ongoingEvents: number;
-    upcomingEvents: number;
+    ongoing_events: number;
+    upcoming_events: number;
   };
 }
 
