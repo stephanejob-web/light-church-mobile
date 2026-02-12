@@ -1,138 +1,188 @@
 /**
  * About Screen
- * Privacy Policy and App Information
- * Google Maps style
+ * Premium Apple-style design with lightchurch.fr dark aesthetic
  */
 
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Linking,
+  Text,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Box, Text } from '@/components/ui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { fetchStats } from '@/services/mapService';
+
+const APP_VERSION = '1.0.0';
+
+interface MenuItemProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
+  label: string;
+  subtitle?: string;
+  onPress: () => void;
+  showChevron?: boolean;
+}
+
+function MenuItem({ icon, iconColor, label, subtitle, onPress, showChevron = true }: MenuItemProps) {
+  return (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.6}>
+      <View style={[styles.menuIcon, { backgroundColor: iconColor }]}>
+        <Ionicons name={icon} size={18} color="#FFFFFF" />
+      </View>
+      <View style={styles.menuContent}>
+        <Text style={styles.menuLabel}>{label}</Text>
+        {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
+      </View>
+      {showChevron && (
+        <Ionicons name="chevron-forward" size={18} color="rgba(255, 255, 255, 0.25)" />
+      )}
+    </TouchableOpacity>
+  );
+}
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Text style={styles.sectionHeader}>{title.toUpperCase()}</Text>
+  );
+}
 
 export default function AboutScreen() {
-  const appVersion = '1.0.0';
+  const insets = useSafeAreaInsets();
+  const [churches, setChurches] = useState(0);
+  const [events, setEvents] = useState(0);
 
-  const handleOpenWebsite = () => {
-    Linking.openURL('https://lightchurch.fr');
-  };
+  useEffect(() => {
+    fetchStats()
+      .then(data => {
+        if (data.success && data.stats) {
+          setChurches(data.stats.churches || 0);
+          const s = data.stats as Record<string, number>;
+          setEvents(s.events || (s.ongoingEvents || 0) + (s.upcomingEvents || 0) || 0);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-  const handleOpenEmail = () => {
-    Linking.openURL('mailto:contact@lightchurch.fr');
-  };
+  const handleOpenWebsite = () => Linking.openURL('https://lightchurch.fr');
+  const handleOpenEmail = () => Linking.openURL('mailto:contact@lightchurch.fr');
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <Box
-        padding="l"
-        backgroundColor="surface"
-        borderBottomWidth={1}
-        borderBottomColor="border"
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+        showsVerticalScrollIndicator={false}
       >
-        <Text variant="header" style={styles.headerText}>
-          À propos
-        </Text>
-        <Text variant="caption" color="textSecondary" marginTop="xs">
-          Light Church v{appVersion}
-        </Text>
-      </Box>
+        {/* Hero Header */}
+        <LinearGradient
+          colors={['#0F172A', '#020617']}
+          style={[styles.hero, { paddingTop: insets.top + 32 }]}
+        >
+          <Text style={styles.heroTitle}>Light Church</Text>
+          <Text style={styles.heroTagline}>
+            L'information chrétienne{'\n'}
+            <Text style={styles.heroTaglineAccent}>enfin centralisée.</Text>
+          </Text>
+          <Text style={styles.heroVersion}>Version {APP_VERSION}</Text>
 
-      {/* Content */}
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* App Icon */}
-        <View style={styles.iconContainer}>
-          <Ionicons name="business-outline" size={48} color="#4285F4" />
-        </View>
-
-        <Text variant="subtitle" style={styles.appName}>
-          Light Church
-        </Text>
-
-        <Text variant="body" color="textSecondary" textAlign="center" style={styles.tagline}>
-          Trouvez des églises et événements chrétiens près de chez vous
-        </Text>
-
-        {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleOpenWebsite}>
-            <Ionicons name="globe-outline" size={20} color="#4285F4" />
-            <Text style={styles.actionText}>Site web</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton} onPress={handleOpenEmail}>
-            <Ionicons name="mail-outline" size={20} color="#4285F4" />
-            <Text style={styles.actionText}>Nous contacter</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Privacy Policy Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="shield-checkmark-outline" size={24} color="#5F6368" />
-            <Text variant="subtitle" style={styles.sectionTitle}>
-              Politique de confidentialité
-            </Text>
+          {/* Mini Stats */}
+          <View style={styles.statsRow}>
+            <View style={styles.statBlock}>
+              <Text style={styles.statNumber}>
+                {churches > 0 ? churches.toLocaleString('fr-FR') : '—'}
+              </Text>
+              <Text style={styles.statUnit}>églises</Text>
+            </View>
+            <View style={styles.statSeparator} />
+            <View style={styles.statBlock}>
+              <Text style={styles.statNumber}>
+                {events > 0 ? events.toLocaleString('fr-FR') : '—'}
+              </Text>
+              <Text style={styles.statUnit}>événements</Text>
+            </View>
           </View>
+        </LinearGradient>
 
-          <Text variant="body" color="textSecondary" style={styles.policyText}>
-            <Text style={styles.bold}>Collecte de données{'\n'}</Text>
-            Light Church collecte uniquement les données nécessaires au fonctionnement de
-            l'application : votre position géographique pour afficher les églises et événements
-            à proximité.
-          </Text>
+        {/* Links Section */}
+        <SectionHeader title="Liens" />
+        <View style={styles.menuGroup}>
+          <MenuItem
+            icon="globe-outline"
+            iconColor="#3B82F6"
+            label="Site web"
+            subtitle="lightchurch.fr"
+            onPress={handleOpenWebsite}
+          />
+          <View style={styles.separator} />
+          <MenuItem
+            icon="mail-outline"
+            iconColor="#8B5CF6"
+            label="Nous contacter"
+            subtitle="contact@lightchurch.fr"
+            onPress={handleOpenEmail}
+          />
+        </View>
 
-          <Text variant="body" color="textSecondary" style={styles.policyText}>
-            <Text style={styles.bold}>Utilisation des données{'\n'}</Text>
-            Vos données de localisation sont utilisées uniquement pour calculer les distances
-            et ne sont jamais stockées sur nos serveurs. Aucune donnée personnelle n'est
-            collectée sans votre consentement.
-          </Text>
+        {/* Privacy Section */}
+        <SectionHeader title="Confidentialité" />
+        <View style={styles.menuGroup}>
+          <View style={styles.policyContainer}>
+            <PolicyItem
+              title="Collecte de données"
+              text="Light Church collecte uniquement votre position géographique pour afficher les églises et événements à proximité. Aucune autre donnée personnelle n'est collectée."
+            />
+            <PolicyItem
+              title="Utilisation"
+              text="Vos données de localisation sont utilisées uniquement côté client pour calculer les distances. Elles ne sont jamais transmises ni stockées sur nos serveurs."
+            />
+            <PolicyItem
+              title="Notifications"
+              text="Si vous activez les notifications, votre token est stocké de manière chiffrée pour vous informer des mises à jour d'événements. Désactivable à tout moment."
+            />
+            <PolicyItem
+              title="Stockage local"
+              text="Vos préférences et favoris sont sauvegardés localement sur votre appareil. Ces données ne quittent jamais votre téléphone."
+            />
+            <PolicyItem
+              title="Partage"
+              text="Nous ne vendons, ne louons ni ne partageons vos données personnelles avec des tiers."
+            />
+            <PolicyItem
+              title="Vos droits (RGPD)"
+              text="Vous pouvez accéder, rectifier ou supprimer vos données à tout moment en nous contactant."
+              isLast
+            />
+          </View>
+        </View>
 
-          <Text variant="body" color="textSecondary" style={styles.policyText}>
-            <Text style={styles.bold}>Notifications push{'\n'}</Text>
-            Si vous activez les notifications, nous stockons votre token de notification pour
-            vous informer des mises à jour d'événements auxquels vous vous êtes inscrit. Vous
-            pouvez désactiver les notifications à tout moment dans les paramètres de votre
-            appareil.
-          </Text>
-
-          <Text variant="body" color="textSecondary" style={styles.policyText}>
-            <Text style={styles.bold}>Cookies et stockage local{'\n'}</Text>
-            L'application utilise le stockage local de votre appareil pour sauvegarder vos
-            préférences (filtres, favoris). Ces données restent sur votre appareil et ne sont
-            jamais partagées.
-          </Text>
-
-          <Text variant="body" color="textSecondary" style={styles.policyText}>
-            <Text style={styles.bold}>Partage des données{'\n'}</Text>
-            Nous ne vendons, ne louons ni ne partageons vos données personnelles avec des
-            tiers. Les informations publiques sur les églises et événements proviennent de
-            sources publiques et de contributions vérifiées.
-          </Text>
-
-          <Text variant="body" color="textSecondary" style={styles.policyText}>
-            <Text style={styles.bold}>Sécurité{'\n'}</Text>
-            Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos
-            données contre tout accès non autorisé.
-          </Text>
-
-          <Text variant="body" color="textSecondary" style={styles.policyText}>
-            <Text style={styles.bold}>Vos droits{'\n'}</Text>
-            Conformément au RGPD, vous avez le droit d'accéder, de rectifier ou de supprimer
-            vos données personnelles. Pour toute demande, contactez-nous à{' '}
-            <Text style={styles.link} onPress={handleOpenEmail}>
-              contact@lightchurch.fr
-            </Text>
-          </Text>
-
-          <Text variant="caption" color="textSecondary" style={styles.lastUpdated}>
-            Dernière mise à jour : Janvier 2026
-          </Text>
+        {/* Legal Section */}
+        <SectionHeader title="Informations légales" />
+        <View style={styles.menuGroup}>
+          <MenuItem
+            icon="document-text-outline"
+            iconColor="#6B7280"
+            label="Conditions d'utilisation"
+            onPress={handleOpenWebsite}
+          />
+          <View style={styles.separator} />
+          <MenuItem
+            icon="shield-checkmark-outline"
+            iconColor="#10B981"
+            label="Politique de confidentialité"
+            onPress={handleOpenWebsite}
+          />
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text variant="caption" color="textSecondary" textAlign="center">
+          <Text style={styles.footerText}>
+            Fait avec soin en France
+          </Text>
+          <Text style={styles.footerCopyright}>
             © 2026 Light Church. Tous droits réservés.
           </Text>
         </View>
@@ -141,98 +191,170 @@ export default function AboutScreen() {
   );
 }
 
+function PolicyItem({ title, text, isLast = false }: { title: string; text: string; isLast?: boolean }) {
+  return (
+    <View style={[styles.policyItem, !isLast && styles.policyItemBorder]}>
+      <Text style={styles.policyTitle}>{title}</Text>
+      <Text style={styles.policyText}>{text}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0B0F1A',
   },
-  headerText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#202124',
-  },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 40,
-  },
-  iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#E8F0FE',
-    justifyContent: 'center',
+
+  // Hero
+  hero: {
     alignItems: 'center',
-    alignSelf: 'center',
-    marginBottom: 16,
+    paddingBottom: 28,
+    paddingHorizontal: 24,
   },
-  appName: {
+  heroTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.4)',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  heroTagline: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#202124',
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 8,
+    lineHeight: 32,
   },
-  tagline: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 24,
+  heroTaglineAccent: {
+    color: '#3B82F6',
   },
-  actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    marginBottom: 32,
+  heroVersion: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.3)',
+    marginTop: 10,
   },
-  actionButton: {
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#F1F3F4',
-    borderRadius: 20,
-    gap: 8,
+    marginTop: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    gap: 20,
   },
-  actionText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#4285F4',
-  },
-  section: {
-    marginTop: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
+  statBlock: {
     alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
   },
-  sectionTitle: {
+  statNumber: {
     fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    fontVariant: ['tabular-nums'],
+  },
+  statUnit: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)',
+    marginTop: 2,
+  },
+  statSeparator: {
+    width: 1,
+    height: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+
+  // Section Headers
+  sectionHeader: {
+    fontSize: 13,
     fontWeight: '600',
-    color: '#202124',
+    color: 'rgba(255, 255, 255, 0.35)',
+    letterSpacing: 0.5,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 8,
+  },
+
+  // Menu Groups
+  menuGroup: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 14,
+    marginHorizontal: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  menuIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 7,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  menuContent: {
+    flex: 1,
+  },
+  menuLabel: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#FFFFFF',
+  },
+  menuSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.4)',
+    marginTop: 1,
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginLeft: 60,
+  },
+
+  // Policy
+  policyContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  policyItem: {
+    paddingVertical: 14,
+  },
+  policyItemBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  policyTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
   policyText: {
     fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 16,
+    lineHeight: 20,
+    color: 'rgba(255, 255, 255, 0.45)',
   },
-  bold: {
-    fontWeight: '600',
-    color: '#202124',
-  },
-  link: {
-    color: '#4285F4',
-    textDecorationLine: 'underline',
-  },
-  lastUpdated: {
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
+
+  // Footer
   footer: {
-    marginTop: 32,
-    paddingTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#E8EAED',
+    alignItems: 'center',
+    paddingTop: 28,
+    paddingBottom: 8,
+  },
+  footerText: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.3)',
+  },
+  footerCopyright: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.2)',
+    marginTop: 4,
   },
 });
