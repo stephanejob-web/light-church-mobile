@@ -10,7 +10,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Box, Text, Card } from '@/components/ui';
-import { DetailSkeleton } from '@/components/ui/Skeleton';
+import { DetailSkeleton } from '@/components/Skeleton';
 import { useEventDetail, useIsInterested, useToggleEventInterest } from '@/hooks/query';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

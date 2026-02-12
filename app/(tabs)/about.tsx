@@ -1,6 +1,6 @@
 /**
  * About Screen
- * Premium Apple-style design with lightchurch.fr dark aesthetic
+ * Apple Settings style — light theme
  */
 
 import React, { useEffect, useState } from 'react';
@@ -10,11 +10,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  Image,
   Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { fetchStats } from '@/services/mapService';
 
 const APP_VERSION = '1.0.0';
@@ -39,7 +39,7 @@ function MenuItem({ icon, iconColor, label, subtitle, onPress, showChevron = tru
         {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
       </View>
       {showChevron && (
-        <Ionicons name="chevron-forward" size={18} color="rgba(255, 255, 255, 0.25)" />
+        <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
       )}
     </TouchableOpacity>
   );
@@ -48,6 +48,15 @@ function MenuItem({ icon, iconColor, label, subtitle, onPress, showChevron = tru
 function SectionHeader({ title }: { title: string }) {
   return (
     <Text style={styles.sectionHeader}>{title.toUpperCase()}</Text>
+  );
+}
+
+function PolicyItem({ title, text, isLast = false }: { title: string; text: string; isLast?: boolean }) {
+  return (
+    <View style={[styles.policyItem, !isLast && styles.policyItemBorder]}>
+      <Text style={styles.policyTitle}>{title}</Text>
+      <Text style={styles.policyText}>{text}</Text>
+    </View>
   );
 }
 
@@ -77,19 +86,21 @@ export default function AboutScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Header */}
-        <LinearGradient
-          colors={['#0F172A', '#020617']}
-          style={[styles.hero, { paddingTop: insets.top + 32 }]}
-        >
+        {/* Hero */}
+        <View style={[styles.hero, { paddingTop: insets.top + 32 }]}>
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.heroTitle}>Light Church</Text>
           <Text style={styles.heroTagline}>
             L'information chrétienne{'\n'}
-            <Text style={styles.heroTaglineAccent}>enfin centralisée.</Text>
+            <Text style={styles.heroAccent}>enfin centralisée.</Text>
           </Text>
           <Text style={styles.heroVersion}>Version {APP_VERSION}</Text>
 
-          {/* Mini Stats */}
+          {/* Stats pill */}
           <View style={styles.statsRow}>
             <View style={styles.statBlock}>
               <Text style={styles.statNumber}>
@@ -105,14 +116,14 @@ export default function AboutScreen() {
               <Text style={styles.statUnit}>événements</Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
-        {/* Links Section */}
+        {/* Links */}
         <SectionHeader title="Liens" />
         <View style={styles.menuGroup}>
           <MenuItem
             icon="globe-outline"
-            iconColor="#3B82F6"
+            iconColor="#4285F4"
             label="Site web"
             subtitle="lightchurch.fr"
             onPress={handleOpenWebsite}
@@ -127,7 +138,7 @@ export default function AboutScreen() {
           />
         </View>
 
-        {/* Privacy Section */}
+        {/* Privacy */}
         <SectionHeader title="Confidentialité" />
         <View style={styles.menuGroup}>
           <View style={styles.policyContainer}>
@@ -159,7 +170,7 @@ export default function AboutScreen() {
           </View>
         </View>
 
-        {/* Legal Section */}
+        {/* Legal */}
         <SectionHeader title="Informations légales" />
         <View style={styles.menuGroup}>
           <MenuItem
@@ -171,7 +182,7 @@ export default function AboutScreen() {
           <View style={styles.separator} />
           <MenuItem
             icon="shield-checkmark-outline"
-            iconColor="#10B981"
+            iconColor="#34A853"
             label="Politique de confidentialité"
             onPress={handleOpenWebsite}
           />
@@ -179,23 +190,10 @@ export default function AboutScreen() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Fait avec soin en France
-          </Text>
-          <Text style={styles.footerCopyright}>
-            © 2026 Light Church. Tous droits réservés.
-          </Text>
+          <Text style={styles.footerText}>Fait avec soin en France</Text>
+          <Text style={styles.footerCopyright}>© 2026 Light Church. Tous droits réservés.</Text>
         </View>
       </ScrollView>
-    </View>
-  );
-}
-
-function PolicyItem({ title, text, isLast = false }: { title: string; text: string; isLast?: boolean }) {
-  return (
-    <View style={[styles.policyItem, !isLast && styles.policyItemBorder]}>
-      <Text style={styles.policyTitle}>{title}</Text>
-      <Text style={styles.policyText}>{text}</Text>
     </View>
   );
 }
@@ -203,45 +201,53 @@ function PolicyItem({ title, text, isLast = false }: { title: string; text: stri
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F1A',
+    backgroundColor: '#F2F2F7',
   },
 
   // Hero
   hero: {
     alignItems: 'center',
-    paddingBottom: 28,
+    backgroundColor: '#FFFFFF',
+    paddingBottom: 24,
     paddingHorizontal: 24,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E5EA',
   },
-  heroTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.4)',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
+  logo: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
     marginBottom: 12,
   },
-  heroTagline: {
-    fontSize: 24,
+  heroTitle: {
+    fontSize: 22,
     fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 32,
+    color: '#1C1C1E',
   },
-  heroTaglineAccent: {
-    color: '#3B82F6',
+  heroTagline: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#8E8E93',
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 23,
+  },
+  heroAccent: {
+    color: '#4285F4',
+    fontWeight: '600',
   },
   heroVersion: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.3)',
-    marginTop: 10,
+    color: '#AEAEB2',
+    marginTop: 6,
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 14,
-    paddingVertical: 14,
+    marginTop: 18,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12,
+    paddingVertical: 12,
     paddingHorizontal: 28,
     gap: 20,
   },
@@ -251,39 +257,37 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#1C1C1E',
     fontVariant: ['tabular-nums'],
   },
   statUnit: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: '#8E8E93',
     marginTop: 2,
   },
   statSeparator: {
     width: 1,
-    height: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    height: 24,
+    backgroundColor: '#D1D1D6',
   },
 
   // Section Headers
   sectionHeader: {
     fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.35)',
-    letterSpacing: 0.5,
+    fontWeight: '500',
+    color: '#6D6D72',
+    letterSpacing: 0.3,
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 8,
   },
 
-  // Menu Groups
+  // Menu Groups (Apple Settings)
   menuGroup: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     marginHorizontal: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   menuItem: {
     flexDirection: 'row',
@@ -305,16 +309,16 @@ const styles = StyleSheet.create({
   menuLabel: {
     fontSize: 16,
     fontWeight: '400',
-    color: '#FFFFFF',
+    color: '#1C1C1E',
   },
   menuSubtitle: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: '#8E8E93',
     marginTop: 1,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#C6C6C8',
     marginLeft: 60,
   },
 
@@ -328,18 +332,18 @@ const styles = StyleSheet.create({
   },
   policyItemBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: '#E5E5EA',
   },
   policyTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#1C1C1E',
     marginBottom: 4,
   },
   policyText: {
     fontSize: 14,
     lineHeight: 20,
-    color: 'rgba(255, 255, 255, 0.45)',
+    color: '#8E8E93',
   },
 
   // Footer
@@ -350,11 +354,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.3)',
+    color: '#8E8E93',
   },
   footerCopyright: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.2)',
+    color: '#AEAEB2',
     marginTop: 4,
   },
 });
