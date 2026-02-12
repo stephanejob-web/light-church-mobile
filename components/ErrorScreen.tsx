@@ -1,3 +1,4 @@
+
 /**
  * Écran d'erreur pour les échecs critiques au démarrage
  */

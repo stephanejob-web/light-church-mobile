@@ -3,7 +3,7 @@
  * Premium UI with shadows and icons
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Box, Text } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,12 +12,16 @@ import { formatDistance } from '@/utils/geo';
 
 interface ChurchCardProps {
   church: Church;
-  onPress: () => void;
+  onPress: (church: Church) => void;
 }
 
 export default React.memo(function ChurchCard({ church, onPress }: ChurchCardProps) {
+  const handlePress = useCallback(() => {
+    onPress(church);
+  }, [onPress, church]);
+
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.container}>
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.7} style={styles.container}>
       <Box
         backgroundColor="surface"
         borderRadius="l"
@@ -63,7 +67,7 @@ export default React.memo(function ChurchCard({ church, onPress }: ChurchCardPro
 
           {church.city && (
             <Box flexDirection="row" alignItems="center" marginTop="xs">
-              <Ionicons name="location-outline" size={12} color="#80868B" style={{ marginRight: 2 }} />
+              <Ionicons name="location-outline" size={12} color="#80868B" style={styles.iconMargin} />
               <Text variant="small" color="textTertiary">
                 {church.city}
               </Text>
@@ -95,6 +99,9 @@ const styles = StyleSheet.create({
         elevation: 3,
       },
     }),
+  },
+  iconMargin: {
+    marginRight: 2,
   },
 });
 

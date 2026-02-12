@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SearchInputProps {
@@ -21,16 +21,11 @@ export default function SearchInput({
   resultCount,
 }: SearchInputProps) {
   const showClearButton = value.length > 0;
+  const showResultCount = resultCount !== undefined && value.length > 0;
 
   const handleClear = () => {
     onChangeText('');
   };
-
-  // Inline resultCount into placeholder when active
-  const displayPlaceholder =
-    resultCount !== undefined && value.length > 0
-      ? `${resultCount} résultat${resultCount !== 1 ? 's' : ''} pour "${value}"`
-      : placeholder;
 
   return (
     <View style={styles.container}>
@@ -48,13 +43,20 @@ export default function SearchInput({
           style={styles.input}
           value={value}
           onChangeText={onChangeText}
-          placeholder={displayPlaceholder}
+          placeholder={placeholder}
           placeholderTextColor="#80868B"
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
           clearButtonMode="never" // We use custom clear button
         />
+
+        {/* Inline result count badge — compact, stays inside the input bar */}
+        {showResultCount && (
+          <Text style={styles.resultBadge}>
+            {resultCount}
+          </Text>
+        )}
 
         {/* Clear Button */}
         {showClearButton && (
@@ -95,6 +97,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#202124',
     paddingVertical: 0,
+  },
+  resultBadge: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4285F4',
+    backgroundColor: '#E8F0FE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginLeft: 4,
   },
   clearButton: {
     marginLeft: 8,

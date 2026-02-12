@@ -137,13 +137,22 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
       });
     }, [churches, events, initialShowChurches, initialShowEvents, filterChurches, filterEvents, deferredSearchQuery, sortBy]);
 
+    // Stable press handlers — keyed by id to preserve React.memo on cards
+    const handleChurchPress = useCallback((church: Church) => {
+      onChurchPress(church);
+    }, [onChurchPress]);
+
+    const handleEventPress = useCallback((event: Event) => {
+      onEventPress(event);
+    }, [onEventPress]);
+
     const renderItem = useCallback(({ item }: { item: typeof data[0] }) => {
       if (item.type === 'church') {
-        return <ChurchCard church={item.data as Church} onPress={() => onChurchPress(item.data as Church)} />;
+        return <ChurchCard church={item.data as Church} onPress={handleChurchPress} />;
       } else {
-        return <EventCard event={item.data as Event} onPress={() => onEventPress(item.data as Event)} />;
+        return <EventCard event={item.data as Event} onPress={handleEventPress} />;
       }
-    }, [onChurchPress, onEventPress]);
+    }, [handleChurchPress, handleEventPress]);
 
     const keyExtractor = useCallback((item: typeof data[0]) => {
       return `${item.type}-${item.data.id}`;
@@ -160,10 +169,30 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
     // Show search bar only if there are more than 15 results (Google Maps style)
     const showSearchBar = totalItems > 15;
 
-    // Sticky header: search + chips (Google Maps iOS style)
-    const ListHeader = useCallback(() => (
-      <View style={styles.stickyHeader}>
-        {/* Search Input (only if >15 results) */}
+    // Stable empty component — avoids new JSX allocation on every render
+    const listEmpty = useMemo(() => (
+      <Box padding="xl" alignItems="center" justifyContent="center">
+        <Text variant="body" color="textSecondary" textAlign="center">
+          {!filterChurches && !filterEvents
+            ? 'Veuillez sélectionner au moins un filtre'
+            : 'Aucun résultat ne correspond à vos filtres'}
+        </Text>
+      </Box>
+    ), [filterChurches, filterEvents]);
+
+    return (
+      <BottomSheet
+        ref={ref}
+        index={0}
+        snapPoints={snapPoints}
+        topInset={topInset}
+        enablePanDownToClose={false}
+        enableOverDrag={false}
+        handleIndicatorStyle={styles.handleIndicator}
+        backgroundStyle={styles.background}
+      >
+        {/* Search + Chips: outside FlatList = naturally sticky.
+            Only the FlatList content scrolls beneath them. */}
         {showSearchBar && (
           <View>
             <SearchInput
@@ -172,7 +201,6 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
               placeholder="Filtrer les résultats..."
               resultCount={deferredSearchQuery.trim() ? data.length : undefined}
             />
-            {/* Loading indicator during non-blocking filter */}
             {isFiltering && (
               <Box
                 position="absolute"
@@ -191,7 +219,6 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
           </View>
         )}
 
-        {/* Filter & Sort Chips */}
         <FilterAndSortChips
           showChurches={filterChurches}
           showEvents={filterEvents}
@@ -202,37 +229,23 @@ const ChurchesBottomSheet = forwardRef<BottomSheet, ChurchesBottomSheetProps>(
           sortBy={sortBy}
           onSortChange={handleSortChange}
         />
-      </View>
-    ), [showSearchBar, searchQuery, deferredSearchQuery, data.length, isFiltering, filterChurches, filterEvents, churches.length, events.length, handleToggleChurches, handleToggleEvents, sortBy, handleSortChange]);
 
-    return (
-      <BottomSheet
-        ref={ref}
-        index={0}
-        snapPoints={snapPoints}
-        topInset={topInset}
-        enablePanDownToClose={false}
-        enableOverDrag={false}
-        handleIndicatorStyle={styles.handleIndicator}
-        backgroundStyle={styles.background}
-      >
+        {/* Results List — only this scrolls */}
         <BottomSheetFlatList
           data={data}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          ListHeaderComponent={ListHeader}
-          stickyHeaderIndices={[0]}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <Box padding="xl" alignItems="center" justifyContent="center">
-              <Text variant="body" color="textSecondary" textAlign="center">
-                {!filterChurches && !filterEvents
-                  ? 'Veuillez sélectionner au moins un filtre'
-                  : 'Aucun résultat ne correspond à vos filtres'}
-              </Text>
-            </Box>
-          }
+          // Perf: reduce off-screen renders (default windowSize=21 → 5 = 2 screens above/below)
+          windowSize={5}
+          // Perf: render max 8 items per JS frame (default=10, lower = smoother scroll)
+          maxToRenderPerBatch={8}
+          // Perf: initial render limited for faster TTI
+          initialNumToRender={10}
+          // Perf: detach off-screen views from native hierarchy (Android RAM saver)
+          removeClippedSubviews={Platform.OS === 'android'}
+          ListEmptyComponent={listEmpty}
         />
       </BottomSheet>
     );
@@ -256,9 +269,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-  },
-  stickyHeader: {
-    backgroundColor: '#FFFFFF',
   },
   listContent: {
     paddingBottom: 100,

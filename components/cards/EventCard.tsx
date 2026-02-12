@@ -3,7 +3,7 @@
  * Premium UI with shadows and refined layout
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Box, Text } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +15,7 @@ import { fr } from 'date-fns/locale';
 
 interface EventCardProps {
   event: Event;
-  onPress: () => void;
+  onPress: (event: Event) => void;
 }
 
 /**
@@ -54,16 +54,28 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
   // Use global time context - only this component re-renders every minute
   const currentTime = useCurrentTime();
 
-  const startDate = new Date(event.start_datetime);
-  const endDate = event.end_datetime ? new Date(event.end_datetime) : null;
-  const isSameDay = endDate ? startDate.toDateString() === endDate.toDateString() : true;
-  const formattedDay = isSameDay
-    ? format(startDate, 'dd', { locale: fr })
-    : `${format(startDate, 'd', { locale: fr })}-${format(endDate!, 'd', { locale: fr })}`;
-  const formattedMonth = format(startDate, 'MMM', { locale: fr }).toUpperCase();
-  const formattedTime = isSameDay
-    ? format(startDate, 'HH:mm', { locale: fr })
-    : `${format(startDate, 'd MMM', { locale: fr })} - ${format(endDate!, 'd MMM', { locale: fr })}`;
+  const handlePress = useCallback(() => {
+    onPress(event);
+  }, [onPress, event]);
+
+  // Memoize date parsing and formatting — these NEVER change for a given event
+  const { startDate, endDate, isSameDay, formattedDay, formattedMonth, formattedTime } = useMemo(() => {
+    const start = new Date(event.start_datetime);
+    const end = event.end_datetime ? new Date(event.end_datetime) : null;
+    const sameDay = end ? start.toDateString() === end.toDateString() : true;
+    return {
+      startDate: start,
+      endDate: end,
+      isSameDay: sameDay,
+      formattedDay: sameDay
+        ? format(start, 'dd', { locale: fr })
+        : `${format(start, 'd', { locale: fr })}-${format(end!, 'd', { locale: fr })}`,
+      formattedMonth: format(start, 'MMM', { locale: fr }).toUpperCase(),
+      formattedTime: sameDay
+        ? format(start, 'HH:mm', { locale: fr })
+        : `${format(start, 'd MMM', { locale: fr })} - ${format(end!, 'd MMM', { locale: fr })}`,
+    };
+  }, [event.start_datetime, event.end_datetime]);
 
   // Calculer le statut de l'événement
   const eventStatus = useMemo(() => {
@@ -85,7 +97,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
   }, [eventStatus, event.end_datetime, currentTime]);
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.container}>
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.7} style={styles.container}>
       <Box
         backgroundColor={eventStatus === 'CANCELLED' ? 'disabled' : 'surface'}
         borderRadius="l"
@@ -107,9 +119,9 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
             paddingHorizontal="s"
             paddingVertical="xs"
             borderRadius="s"
-            style={{ zIndex: 10 }}
+            style={styles.cancelledBadge}
           >
-            <Text variant="small" fontWeight="700" fontSize={11} style={{ color: '#FFFFFF' }}>
+            <Text variant="small" fontWeight="700" fontSize={11} style={styles.cancelledBadgeText}>
               ANNULÉ
             </Text>
           </Box>
@@ -126,7 +138,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
           marginRight="m"
           borderWidth={1}
           borderColor="border"
-          style={eventStatus === 'CANCELLED' && { opacity: 0.5 }}
+          style={eventStatus === 'CANCELLED' && styles.cancelledOpacity}
         >
           <Text
             variant="small"
@@ -154,7 +166,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
             variant="subtitle"
             numberOfLines={1}
             marginBottom="xs"
-            style={eventStatus === 'CANCELLED' && { opacity: 0.7 }}
+            style={eventStatus === 'CANCELLED' && styles.cancelledTitleOpacity}
           >
             {event.title}
           </Text>
@@ -169,7 +181,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
               backgroundColor="card"
               flexDirection="row"
               alignItems="center"
-              style={{ borderLeftWidth: 3, borderLeftColor: '#EA4335' }}
+              style={styles.cancellationReason}
             >
               <Ionicons name="information-circle" size={14} color="#EA4335" />
               <Text
@@ -177,7 +189,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
                 color="textSecondary"
                 marginLeft="xs"
                 numberOfLines={1}
-                style={{ flex: 1 }}
+                style={styles.flex1}
               >
                 {event.cancellation_reason}
               </Text>
@@ -211,7 +223,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
           )}
 
           <Box flexDirection="row" alignItems="center" flexWrap="wrap" marginBottom="xs">
-            <Ionicons name="time-outline" size={14} color="#80868B" style={{ marginRight: 4 }} />
+            <Ionicons name="time-outline" size={14} color="#80868B" style={styles.timeIcon} />
             <Text variant="caption" color="textSecondary">
               {formattedTime}
             </Text>
@@ -220,7 +232,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
                 <Text variant="caption" color="textSecondary" marginHorizontal="xs">
                   •
                 </Text>
-                <Text variant="caption" color="textSecondary" numberOfLines={1} style={{ flex: 1 }}>
+                <Text variant="caption" color="textSecondary" numberOfLines={1} style={styles.flex1}>
                   {event.church_name}
                 </Text>
               </>
@@ -230,7 +242,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
           <Box flexDirection="row" alignItems="center" flexWrap="wrap" gap="m">
             {event.distance_km !== undefined && (
               <Box flexDirection="row" alignItems="center">
-                <Ionicons name="location-sharp" size={12} color="#4285F4" style={{ marginRight: 2 }} />
+                <Ionicons name="location-sharp" size={12} color="#4285F4" style={styles.iconMargin} />
                 <Text variant="small" color="primary" fontWeight="500">
                   {formatDistance(event.distance_km)}
                 </Text>
@@ -238,7 +250,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
             )}
             {event.event_city && (
               <Box flexDirection="row" alignItems="center">
-                <Ionicons name="location-outline" size={12} color="#80868B" style={{ marginRight: 2 }} />
+                <Ionicons name="location-outline" size={12} color="#80868B" style={styles.iconMargin} />
                 <Text variant="small" color="textSecondary">
                   {event.event_city}
                 </Text>
@@ -246,7 +258,7 @@ export default React.memo(function EventCard({ event, onPress }: EventCardProps)
             )}
             {event.interested_count !== undefined && event.interested_count > 0 && (
               <Box flexDirection="row" alignItems="center">
-                <Ionicons name="people" size={12} color="#80868B" style={{ marginRight: 2 }} />
+                <Ionicons name="people" size={12} color="#80868B" style={styles.iconMargin} />
                 <Text variant="small" color="textSecondary">
                   {event.interested_count}
                 </Text>
@@ -285,6 +297,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#EA4335',
     backgroundColor: '#F8F9FA',
+  },
+  cancelledBadge: {
+    zIndex: 10,
+  },
+  cancelledBadgeText: {
+    color: '#FFFFFF',
+  },
+  cancelledOpacity: {
+    opacity: 0.5,
+  },
+  cancelledTitleOpacity: {
+    opacity: 0.7,
+  },
+  cancellationReason: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#EA4335',
+  },
+  flex1: {
+    flex: 1,
+  },
+  timeIcon: {
+    marginRight: 4,
+  },
+  iconMargin: {
+    marginRight: 2,
   },
   countdownBadge: {
     alignSelf: 'flex-start',
