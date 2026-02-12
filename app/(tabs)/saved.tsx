@@ -6,12 +6,13 @@
  */
 
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { View, StyleSheet, RefreshControl, Alert, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, RefreshControl, Alert, TouchableOpacity, Platform } from 'react-native';
 import { FlashList, type FlashListProps } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Box, Text } from '@/components/ui';
+import { ListSkeleton } from '@/components/ui/Skeleton';
 import EventCard from '@/components/cards/EventCard';
 import { useInterestedEvents, useRemoveInterest } from '@/hooks/query/useInterestedEvents';
 import { useToast } from '@/contexts/ToastContext';
@@ -149,14 +150,7 @@ export default function SavedScreen() {
   // Empty state
   const renderEmptyState = useMemo(() => {
     if (isLoading) {
-      return (
-        <Box alignItems="center" justifyContent="center" paddingVertical="xl" flex={1}>
-          <ActivityIndicator size="large" color="#4285F4" />
-          <Text variant="body" color="textSecondary" marginTop="m">
-            Chargement...
-          </Text>
-        </Box>
-      );
+      return <ListSkeleton count={4} />;
     }
 
     if (isError) {

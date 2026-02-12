@@ -5,7 +5,8 @@
  */
 
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import api from '@/lib/axios';
 import Constants from 'expo-constants';
 
@@ -46,8 +47,16 @@ if (!isExpoGo) {
   }
 }
 
-const DEVICE_ID_KEY = '@light_church:device_id';
-const PUSH_TOKEN_KEY = '@light_church:push_token';
+const DEVICE_ID_KEY = 'light_church_device_id';
+const PUSH_TOKEN_KEY = 'light_church_push_token';
+
+/**
+ * Generate a cryptographically secure device ID
+ */
+async function generateDeviceId(): Promise<string> {
+  const uuid = Crypto.randomUUID();
+  return `${Platform.OS}-${uuid}`;
+}
 
 /**
  * Demande la permission pour les notifications push
@@ -104,10 +113,10 @@ export async function registerForPushNotifications(): Promise<string | null> {
     const expoPushToken = tokenData.data;
 
     // Générer ou récupérer le device_id
-    let deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
+    let deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
     if (!deviceId) {
-      deviceId = `${Platform.OS}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      await AsyncStorage.setItem(DEVICE_ID_KEY, deviceId);
+      deviceId = await generateDeviceId();
+      await SecureStore.setItemAsync(DEVICE_ID_KEY, deviceId);
     }
 
     // Enregistrer sur le serveur
@@ -117,8 +126,8 @@ export async function registerForPushNotifications(): Promise<string | null> {
       platform: Platform.OS,
     });
 
-    // Sauvegarder localement
-    await AsyncStorage.setItem(PUSH_TOKEN_KEY, expoPushToken);
+    // Sauvegarder le token localement (chiffré)
+    await SecureStore.setItemAsync(PUSH_TOKEN_KEY, expoPushToken);
 
     return deviceId;
   } catch (error) {
@@ -129,17 +138,17 @@ export async function registerForPushNotifications(): Promise<string | null> {
 }
 
 /**
- * Récupère le device_id stocké localement
- * Si aucun device_id n'existe, en crée un pour permettre le tracking sans notifications
+ * Récupère le device_id stocké de manière sécurisée
+ * Si aucun device_id n'existe, en crée un avec crypto
  */
 export async function getDeviceId(): Promise<string | null> {
   try {
-    let deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
+    let deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
 
-    // Si pas de device_id, en créer un (permet de fonctionner sans notifications dans Expo Go)
+    // Si pas de device_id, en créer un sécurisé
     if (!deviceId) {
-      deviceId = `${Platform.OS}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      await AsyncStorage.setItem(DEVICE_ID_KEY, deviceId);
+      deviceId = await generateDeviceId();
+      await SecureStore.setItemAsync(DEVICE_ID_KEY, deviceId);
     }
 
     return deviceId;
